@@ -1,5 +1,5 @@
 [format]
-Name:Block: Lorwyn;Shadowmoor (SHM)
+Name:Block: Lorwyn-Shadowmoor (SHM)
 Type:Archived
 Subtype:Block
 Effective:2008-05-02
