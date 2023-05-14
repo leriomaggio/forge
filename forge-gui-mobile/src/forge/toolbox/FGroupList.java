@@ -165,11 +165,21 @@ public class FGroupList<E> extends FScrollPane {
         return new ScrollBounds(visibleWidth, y);
     }
 
+    public void collapseAll() {
+        for (ListGroup group : this.groups)
+            group.isCollapsed(true);
+    }
+
     private class ListGroup extends FContainer {
         private final FLabel header;
         private final List<ListItem> items = new ArrayList<>();
 
         private boolean isCollapsed;
+
+        public void isCollapsed(boolean collapsed){
+            this.isCollapsed = collapsed;
+            this.revalidate();
+        }
 
         private ListGroup(String name0) {
             if (name0 == null) {

@@ -1,8 +1,6 @@
 package forge.itemmanager.filters;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import com.badlogic.gdx.utils.Align;
 
@@ -11,6 +9,7 @@ import forge.Graphics;
 import forge.assets.FSkinColor;
 import forge.assets.FSkinFont;
 import forge.game.GameFormat;
+import forge.localinstance.properties.ForgePreferences;
 import forge.model.FModel;
 import forge.screens.FScreen;
 import forge.screens.settings.SettingsScreen;
@@ -26,64 +25,53 @@ public class ArchivedFormatSelect extends FScreen {
 
     private GameFormat selectedFormat;
     private final FGroupList<GameFormat> lstFormats = add(new FGroupList<>());
-    private final Set<GameFormat.FormatSubType> archivedSubTypes = new HashSet<>(Arrays.asList(GameFormat.FormatSubType.BLOCK,
-            GameFormat.FormatSubType.STANDARD,GameFormat.FormatSubType.EXTENDED,GameFormat.FormatSubType.MODERN,
-            GameFormat.FormatSubType.LEGACY, GameFormat.FormatSubType.VINTAGE));
 
     private Runnable onCloseCallBack;
 
     public ArchivedFormatSelect() {
         super(Forge.getLocalizer().getMessage("lblChooseFormat"));
-        for (GameFormat.FormatType group:GameFormat.FormatType.values()){
-            if (group == GameFormat.FormatType.ARCHIVED){
-                for (GameFormat.FormatSubType subgroup:GameFormat.FormatSubType.values()){
-                    if (archivedSubTypes.contains(subgroup)){
-                        lstFormats.addGroup(group.name() + "-" + subgroup.name());
-                    }
-                }
-            }else {
+        // Initialise Groups in the Menu list
+        Map<String, Integer> categoryGroupIndex = new HashMap<>();
+        int groupIndex = 0;
+        for (GameFormat.FormatType group:GameFormat.FormatType.values()) {
+            if (group != GameFormat.FormatType.ARCHIVED) {
                 lstFormats.addGroup(group.name());
+                categoryGroupIndex.put(group.name(), groupIndex);
+                groupIndex += 1;
+            }
+
+        }
+
+        boolean loadArchiveFormats = FModel.getPreferences().getPrefBoolean(ForgePreferences.FPref.LOAD_ARCHIVED_FORMATS);
+        Map<String, List<GameFormat>> archivedPerGroup = null;
+        if (loadArchiveFormats) {
+            archivedPerGroup = FModel.getFormats().getArchivedListPerCategory();
+            for (String categoryName: archivedPerGroup.keySet()){
+                lstFormats.addGroup(categoryName);
+                categoryGroupIndex.put(categoryName, groupIndex);
+                groupIndex += 1;
             }
         }
-        for (GameFormat format: FModel.getFormats().getOrderedList()){
-            switch(format.getFormatType()){
-                case SANCTIONED:
-                    lstFormats.addItem(format, 0);
-                    break;
-                case CASUAL:
-                    lstFormats.addItem(format, 1);
-                    break;
-                case ARCHIVED:
-                    switch (format.getFormatSubType()){
-                        case BLOCK:
-                            lstFormats.addItem(format, 2);
-                            break;
-                        case STANDARD:
-                            lstFormats.addItem(format, 3);
-                            break;
-                        case EXTENDED:
-                            lstFormats.addItem(format, 4);
-                            break;
-                        case MODERN:
-                            lstFormats.addItem(format, 5);
-                            break;
-                        case LEGACY:
-                            lstFormats.addItem(format, 6);
-                            break;
-                        case VINTAGE:
-                            lstFormats.addItem(format, 7);
-                            break;
 
-                    }
-                    break;
-                case DIGITAL:
-                    lstFormats.addItem(format, 8);
-                    break;
-                case CUSTOM:
-                    lstFormats.addItem(format, 9);
+
+        for (GameFormat format: FModel.getFormats().getFilterList())
+            lstFormats.addItem(format, categoryGroupIndex.get(format.getFormatType().name()));
+        for (GameFormat format: FModel.getFormats().getFormatTypeList(GameFormat.FormatType.DIGITAL))
+            lstFormats.addItem(format, categoryGroupIndex.get(format.getFormatType().name()));
+        for (GameFormat format: FModel.getFormats().getFormatTypeList(GameFormat.FormatType.CUSTOM))
+            lstFormats.addItem(format, categoryGroupIndex.get(format.getFormatType().name()));
+
+        if (loadArchiveFormats){
+            for (String categoryName: archivedPerGroup.keySet()){
+                int index = categoryGroupIndex.get(categoryName);
+                for (GameFormat format : archivedPerGroup.get(categoryName)){
+                    lstFormats.addItem(format, index);
+                }
             }
         }
         lstFormats.setListItemRenderer(new FormatRenderer());
+        if (loadArchiveFormats)
+            lstFormats.collapseAll();
     }
 
     public GameFormat getSelectedFormat() {
