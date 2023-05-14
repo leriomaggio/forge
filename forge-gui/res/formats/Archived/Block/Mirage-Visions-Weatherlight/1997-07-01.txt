@@ -1,5 +1,5 @@
 [format]
-Name:Block: Mirage;Visions;Weatherlight (WTH)
+Name:Block: Mirage (MIR, VIS, WTH)
 Type:Archived
 Subtype:Block
 Effective:1997-07-01
