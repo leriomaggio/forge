@@ -530,7 +530,7 @@ public class GameFormat implements Comparable<GameFormat> {
             return filterList;
         }
 
-        public Iterable<GameFormat> getFilterListWithAllowedSetsLimitations() {
+        public Iterable<GameFormat> getFilterListWithAllowedSets() {
             List<GameFormat> formatsWithLimitedSets = new ArrayList<>();
             for (GameFormat format : this.getFilterList()) {
                 if (format.getAllowedSetCodes().size() > 0)
