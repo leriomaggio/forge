@@ -9,7 +9,6 @@ import forge.Graphics;
 import forge.assets.FSkinColor;
 import forge.assets.FSkinFont;
 import forge.game.GameFormat;
-import forge.localinstance.properties.ForgePreferences;
 import forge.model.FModel;
 import forge.screens.FScreen;
 import forge.screens.settings.SettingsScreen;
@@ -42,7 +41,7 @@ public class ArchivedFormatSelect extends FScreen {
 
         }
 
-        boolean loadArchiveFormats = FModel.getPreferences().getPrefBoolean(ForgePreferences.FPref.LOAD_ARCHIVED_FORMATS);
+        boolean loadArchiveFormats = FModel.getFormats().allFormatsEnabled();
         Map<String, List<GameFormat>> archivedPerGroup = null;
         if (loadArchiveFormats) {
             archivedPerGroup = FModel.getFormats().getArchivedListPerCategory();

@@ -656,6 +656,12 @@ public class GameFormat implements Comparable<GameFormat> {
             return filterList;
         }
 
+        public boolean allFormatsEnabled() {
+            // Just trying to get a random (block) format that is surely archived
+            // in order to figure out whether archived formats have been loaded
+            return this.getFormat("Odyssey Block") != null;
+        }
+
         public GameFormat getStandard() {
             return this.map.get("Standard");
         }
