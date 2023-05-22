@@ -164,6 +164,8 @@ public final class FModel {
         if (new AutoUpdater(true).attemptToUpdate()) {
             //
         }
+        // load types before loading cards
+        loadDynamicGamedata();
 
         //load card database
         final CardStorageReader reader = new CardStorageReader(ForgeConstants.CARD_DATA_DIR, progressBarBridge,
@@ -242,8 +244,6 @@ public final class FModel {
         worlds = new StorageBase<>("Quest worlds", null, standardWorlds);
 
         Spell.setPerformanceMode(preferences.getPrefBoolean(FPref.PERFORMANCE_MODE));
-
-        loadDynamicGamedata();
 
         if (progressBar != null) {
             FThreads.invokeInEdtLater(new Runnable() {
@@ -424,8 +424,15 @@ public final class FModel {
                             String[] k = s.split(":");
                             addTo.add(k[0]);
                             CardType.Constant.pluralTypes.put(k[0], k[1]);
+
+                            if (k[0].contains(" ")) {
+                                CardType.Constant.MultiwordTypes.add(k[0]);
+                            }
                         } else {
                             addTo.add(s);
+                            if (s.contains(" ")) {
+                                CardType.Constant.MultiwordTypes.add(s);
+                            }
                         }
                     }
                 }
