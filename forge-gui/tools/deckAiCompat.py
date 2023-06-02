@@ -16,11 +16,14 @@ parser.add_argument("-s", action="store_true", help="ignore sideboard when judgi
 args = parser.parse_args()
 
 # simple structural self-test (can this tool work?)
-if not (os.access(os.path.join(CARDSFOLDER,"a","abu_jafar.txt"),os.F_OK) or os.access(os.path.join("decks"),os.F_OK)):
-    print("Fatal error:\n    This utility requires the 'cardsfolder' folder with unpacked card files at " + CARDSFOLDER + " and the 'decks' folder with .dck files at " + DECKFOLDER + " in order to operate. Exiting.")
+if not (os.access(os.path.join(CARDSFOLDER, "a", "abu_jafar.txt"), os.F_OK) or os.access(os.path.join("decks"),
+                                                                                         os.F_OK)):
+    print(
+        "Fatal error:\n    This utility requires the 'cardsfolder' folder with unpacked card files at " + CARDSFOLDER + " and the 'decks' folder with .dck files at " + DECKFOLDER + " in order to operate. Exiting.")
     exit(1)
 if args.p and args.u:
-    print("Fatal error:\n    The -p and -u options are mutually exclusive, please specify one of these options and not both of them at the same time.")
+    print(
+        "Fatal error:\n    The -p and -u options are mutually exclusive, please specify one of these options and not both of them at the same time.")
     exit(1)
 
 # basic variables
@@ -40,7 +43,7 @@ for root, dirs, files in os.walk(CARDSFOLDER):
             fullpath = os.path.join(root, name)
             cardtext = open(fullpath).read()
             cardtext_lower = cardtext.lower()
-            cardname_lines = cardtext.replace('\r','').split('\n')
+            cardname_lines = cardtext.replace('\r', '').split('\n')
             cardname = ""
             for line in cardname_lines:
                 if line.strip().lower().startswith("name:"):
@@ -48,19 +51,21 @@ for root, dirs, files in os.walk(CARDSFOLDER):
                         cardname = line.split(':')[1].strip().lower()
                     break
             if cardname == "":
-                cardname_literal = cardtext.replace('\r','').split('\n')[0].split(':')
+                cardname_literal = cardtext.replace('\r', '').split('\n')[0].split(':')
                 cardname = ":".join(cardname_literal[1:]).strip().lower()
-            if (cardtext_lower.find("alternatemode:split") != -1) or (cardtext_lower.find("alternatemode: split") != -1):
+            if (cardtext_lower.find("alternatemode:split") != -1) or (
+                    cardtext_lower.find("alternatemode: split") != -1):
                 # split card, special handling needed
-                cardsplittext = cardtext.replace('\r','').split('\n')
+                cardsplittext = cardtext.replace('\r', '').split('\n')
                 cardnames = []
                 for line in cardsplittext:
                     if line.lower().find("name:") != -1:
                         cardnames.extend([line.split('\n')[0].split(':')[1].lower()])
                 cardname = " // ".join(cardnames)
-            if (cardtext_lower.find("alternatemode:modal") != -1) or (cardtext_lower.find("alternatemode: modal") != -1):
+            if (cardtext_lower.find("alternatemode:modal") != -1) or (
+                    cardtext_lower.find("alternatemode: modal") != -1):
                 # ZNR modal card, special handling needed
-                cardsplittext = cardtext.replace('\r','').split('\n')
+                cardsplittext = cardtext.replace('\r', '').split('\n')
                 cardnames = []
                 for line in cardsplittext:
                     if line.lower().find("name:") != -1:
@@ -75,7 +80,8 @@ for root, dirs, files in os.walk(CARDSFOLDER):
 perc_playable = (float(ai_playable_cards) / total_cards) * 100
 perc_unplayable = ((float(total_cards) - ai_playable_cards) / total_cards) * 100
 
-print("Loaded %d cards, among them %d playable by the AI (%d%%), %d unplayable by the AI (%d%%).\n" % (total_cards, ai_playable_cards, perc_playable, total_cards - ai_playable_cards, perc_unplayable))
+print("Loaded %d cards, among them %d playable by the AI (%d%%), %d unplayable by the AI (%d%%).\n" % (
+total_cards, ai_playable_cards, perc_playable, total_cards - ai_playable_cards, perc_unplayable))
 
 print("Scanning decks...")
 for root, dirs, files in os.walk(DECKFOLDER):
@@ -92,7 +98,7 @@ for root, dirs, files in os.walk(DECKFOLDER):
                         break
                 regexobj = re.search('^([0-9]+) +([^|]+)', line)
                 if regexobj:
-                    cardname = regexobj.groups()[1].replace('\n','').replace('\r','').strip()
+                    cardname = regexobj.groups()[1].replace('\n', '').replace('\r', '').strip()
                     cardname = cardname.replace('\xC6', 'AE').lower()
                     if cardlist[cardname] == 0:
                         cardnames.extend([cardname])
@@ -103,11 +109,13 @@ for root, dirs, files in os.walk(DECKFOLDER):
                     print("%s is PLAYABLE by the AI." % name)
             else:
                 if not args.p:
-                    print("%s is UNPLAYABLE by the AI (%d unplayable cards: %s)." % (name, nonplayable_in_deck, str(cardnames)))
+                    print("%s is UNPLAYABLE by the AI (%d unplayable cards: %s)." % (
+                    name, nonplayable_in_deck, str(cardnames)))
                 if args.d:
                     os.remove(os.path.join(root, name))
 
 perc_playable_decks = (float(playable_decks) / total_decks) * 100
 perc_unplayable_decks = ((float(total_decks) - playable_decks) / total_decks) * 100
 
-print("\nScanned %d decks, among them %d playable by the AI (%d%%), %d unplayable by the AI (%d%%)." % (total_decks, playable_decks, perc_playable_decks, total_decks - playable_decks, perc_unplayable_decks))
+print("\nScanned %d decks, among them %d playable by the AI (%d%%), %d unplayable by the AI (%d%%)." % (
+total_decks, playable_decks, perc_playable_decks, total_decks - playable_decks, perc_unplayable_decks))

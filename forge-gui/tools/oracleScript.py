@@ -9,8 +9,6 @@ import fnmatch
 import os
 import re
 import urllib.request
-import unidecode
-
 
 NAME_STR = 'Name:'
 ORACLE_STR = 'Oracle:'
@@ -34,16 +32,16 @@ def load_oracle_cards():
         oracle_json = json.load(oracle_file)
     oracle_cards = {}
     for card in oracle_json:
-        if (card['layout'] == 'token' and card['type_line'] != 'Dungeon'):
+        if card['layout'] == 'token' and card['type_line'] != 'Dungeon':
             continue
-        name = unidecode.unidecode(card['name'])
+        name = card['name']
         oracle_cards[name] = card
     return oracle_cards
 
 
 def formalize_name(names):
     name = '_'.join(names)
-    name = unidecode.unidecode(name)
+    name = name
     name = name.lower()
     name = name.replace('& ', '')
     name = name.replace(' ', '_')
@@ -157,6 +155,7 @@ def update_oracle(name, lines, oracle_text, new_oracle, type_line, alternate_lin
 
     return updated
 
+
 def update_card_script(dirname, filename, oracle_cards, logfile):
     file = open(os.path.join(dirname, filename), 'r', encoding='utf8')
     clean_name = filename.replace('.txt', '')
@@ -197,16 +196,18 @@ def update_card_script(dirname, filename, oracle_cards, logfile):
             card = oracle_cards[names[1]]
             type_line = card['type_line'].replace(' — ', ' ')
             new_oracle = card['oracle_text']
-            oracle_updated = oracle_updated | update_oracle(names[1], lines, oracle_texts[1], new_oracle, type_line, alternate_line)
+            oracle_updated = oracle_updated | update_oracle(names[1], lines, oracle_texts[1], new_oracle, type_line,
+                                                            alternate_line)
         else:
             for i, face in enumerate(card['card_faces']):
                 type_line = face['type_line'].replace(' — ', ' ')
                 new_oracle = face['oracle_text']
                 if i == 0:
-                    oracle_updated = oracle_updated | update_oracle(names[i], lines, oracle_texts[i], new_oracle, type_line, 0)
+                    oracle_updated = oracle_updated | update_oracle(names[i], lines, oracle_texts[i], new_oracle,
+                                                                    type_line, 0)
                 else:
-                    oracle_updated = oracle_updated | update_oracle(names[i], lines, oracle_texts[i], new_oracle, type_line, alternate_line)
-
+                    oracle_updated = oracle_updated | update_oracle(names[i], lines, oracle_texts[i], new_oracle,
+                                                                    type_line, alternate_line)
 
     if not oracle_updated:
         return
@@ -233,6 +234,7 @@ def main():
             update_card_script(root, filename, oracle_cards, logfile)
 
     logfile.close()
+
 
 if __name__ == '__main__':
     main()

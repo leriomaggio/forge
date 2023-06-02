@@ -22,7 +22,7 @@ condition = True
 try:
 	os.mkdir(folder)
 except:
-	print folder, "already exists"
+	print(folder, "already exists")
 
 while condition:
 	r = requests.get(url % start)
