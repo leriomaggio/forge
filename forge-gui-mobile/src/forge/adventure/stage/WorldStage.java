@@ -12,6 +12,7 @@ import forge.Forge;
 import forge.adventure.character.CharacterSprite;
 import forge.adventure.character.EnemySprite;
 import forge.adventure.data.*;
+import forge.adventure.pointofintrest.PointOfInterest;
 import forge.adventure.scene.DuelScene;
 import forge.adventure.scene.RewardScene;
 import forge.adventure.scene.Scene;
@@ -43,7 +44,7 @@ public class WorldStage extends GameStage implements SaveFileContent {
     protected ArrayList<Pair<Float, EnemySprite>> enemies = new ArrayList<>();
     private final static Float dieTimer = 20f;//todo config
     private Float globalTimer = 0f;
-    private transient boolean newGame = false;
+    private transient boolean directlyEnterPOI = false;
 
     NavArrowActor navArrow;
     public WorldStage() {
@@ -334,16 +335,29 @@ public class WorldStage extends GameStage implements SaveFileContent {
         }
     }
 
-    public void setupNewGame(){
-        newGame = true; //On a new game, we want to automatically enter any POI the player overlaps with.
+    public void setDirectlyEnterPOI(){
+        directlyEnterPOI = true; //On a new game, we want to automatically enter any POI the player overlaps with.
+    }
+
+    public PointOfInterestMapSprite getMapSprite(PointOfInterest poi) {
+        if (poi == null)
+            return null;
+        for (Actor actor : foregroundSprites.getChildren()) {
+            if (actor.getClass() == PointOfInterestMapSprite.class) {
+                PointOfInterestMapSprite point = (PointOfInterestMapSprite) actor;
+                if (poi == point.getPointOfInterest() && poi.getPosition() == point.getPointOfInterest().getPosition())
+                    return point;
+            }
+        }
+        return null;
     }
 
     @Override
     public void enter() {
         getPlayerSprite().LoadPos();
         getPlayerSprite().setMovementDirection(Vector2.Zero);
-        if (newGame) {
-            newGame = false;
+        if (directlyEnterPOI) {
+            directlyEnterPOI = false;
         }
         else {
             for (Actor actor : foregroundSprites.getChildren()) {

@@ -471,6 +471,11 @@ public class MapStage extends GameStage {
         if (difficultyData.spawnRank == 2 && !spawnHard) return false;
         if (difficultyData.spawnRank == 1 && !spawnNorm) return false;
         if (difficultyData.spawnRank == 0 && !spawnEasy) return false;
+
+        if (prop.containsKey("spawnCondition") && !prop.get("spawnCondition").toString().isEmpty()){
+
+        }
+
         return true;
     }
 
@@ -668,7 +673,7 @@ public class MapStage extends GameStage {
                         //TODO: Ability to move them (using a sequence such as "UULU" for up, up, left, up).
                         break;
                     case "inn":
-                        addMapActor(obj, new OnCollide(() -> Forge.switchScene(InnScene.instance(TileMapScene.instance(), TileMapScene.instance().rootPoint.getID(), id))));
+                        addMapActor(obj, new OnCollide(() -> Forge.switchScene(InnScene.instance(TileMapScene.instance(), TileMapScene.instance().rootPoint.getID(), changes, id))));
                         break;
                     case "spellsmith":
                         addMapActor(obj, new OnCollide(() -> Forge.switchScene(SpellSmithScene.instance())));
@@ -678,7 +683,7 @@ public class MapStage extends GameStage {
                         addMapActor(obj, shardTraderActor);
                         if (prop.containsKey("hasSign") && Boolean.parseBoolean(prop.get("hasSign").toString()) && prop.containsKey("signYOffset") && prop.containsKey("signXOffset")) {
                             try {
-                                TextureSprite sprite = new TextureSprite(Config.instance().getAtlas(ShardTraderScene.spriteAtlas).createSprite(ShardTraderScene.sprite));
+                                TextureSprite sprite = new TextureSprite(Config.instance().getAtlasSprite(ShardTraderScene.spriteAtlas, ShardTraderScene.sprite));
                                 sprite.setX(shardTraderActor.getX() + Float.parseFloat(prop.get("signXOffset").toString()));
                                 sprite.setY(shardTraderActor.getY() + Float.parseFloat(prop.get("signYOffset").toString()));
                                 addMapActor(sprite);
@@ -823,13 +828,13 @@ public class MapStage extends GameStage {
                         addMapActor(obj, actor);
                         if (prop.containsKey("hasSign") && (boolean) prop.get("hasSign") && prop.containsKey("signYOffset") && prop.containsKey("signXOffset")) {
                             try {
-                                TextureSprite sprite = new TextureSprite(Config.instance().getAtlas(data.spriteAtlas).createSprite(data.sprite));
+                                TextureSprite sprite = new TextureSprite(Config.instance().getAtlasSprite(data.spriteAtlas, data.sprite));
                                 sprite.setX(actor.getX() + Float.parseFloat(prop.get("signXOffset").toString()));
                                 sprite.setY(actor.getY() + Float.parseFloat(prop.get("signYOffset").toString()));
                                 addMapActor(sprite);
 
                                 if (!(data.overlaySprite == null || data.overlaySprite.isEmpty())) {
-                                    TextureSprite overlay = new TextureSprite(Config.instance().getAtlas(data.spriteAtlas).createSprite(data.overlaySprite));
+                                    TextureSprite overlay = new TextureSprite(Config.instance().getAtlasSprite(data.spriteAtlas, data.overlaySprite));
                                     overlay.setX(actor.getX() + Float.parseFloat(prop.get("signXOffset").toString()));
                                     overlay.setY(actor.getY() + Float.parseFloat(prop.get("signYOffset").toString()));
                                     addMapActor(overlay);
@@ -1088,7 +1093,6 @@ public class MapStage extends GameStage {
                 if (actor instanceof EnemySprite) {
                     EnemySprite mob = (EnemySprite) actor;
                     currentMob = mob;
-                    currentMob.clearCollisionHeight();
                     resetPosition();
                     if (mob.dialog != null && mob.dialog.canShow()) { //This enemy has something to say. Display a dialog like if it was a DialogActor but only if dialogue is possible.
                         mob.dialog.activate();
@@ -1116,6 +1120,7 @@ public class MapStage extends GameStage {
 
     public void beginDuel(EnemySprite mob) {
         if (mob == null) return;
+        mob.clearCollisionHeight();
         currentMob = mob;
         player.setAnimation(CharacterSprite.AnimationTypes.Attack);
         player.playEffect(Paths.EFFECT_SPARKS, 0.5f);
