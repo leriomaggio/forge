@@ -231,6 +231,7 @@ public class VLobby implements ILobbyView {
             case LEGACY_CARDGEN_DECK:
             case VINTAGE_CARDGEN_DECK:
             case PAUPER_CARDGEN_DECK:
+            case PREMODERN_CARDGEN_DECK:
             case COLOR_DECK:
             case STANDARD_COLOR_DECK:
             case MODERN_COLOR_DECK:

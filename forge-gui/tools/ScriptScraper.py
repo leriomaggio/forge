@@ -22,7 +22,7 @@ condition = True
 try:
 	os.mkdir(folder)
 except:
-	print folder, "already exists"
+	print(folder, "already exists")
 
 while condition:
 	r = requests.get(url % start)
@@ -76,15 +76,15 @@ while condition:
 				for line in lines:
 					f.write("%s\n" % line)
 		except:
-			print path, " Failed..."
+			print(path, " Failed...")
 			continue
 
 		cards += 1
 
 	start += incr
-	print ("About to loop... %s" % start)
-	raw_input("Press Enter to continue...")
+	print("About to loop... %s" % start)
+	input("Press Enter to continue...")
 
 
-print ("Done!")
-raw_input("Press Enter to continue...")
+print("Done!")
+input("Press Enter to continue...")

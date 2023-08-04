@@ -38,7 +38,7 @@ import static forge.lda.lda.inference.InferenceMethod.CGS;
  */
 public final class LDAModelGenetrator {
 
-    public static final String SUPPORTED_LDA_FORMATS = "Historic|Modern|Pioneer|Standard|Legacy|Vintage|Pauper";
+    public static final String SUPPORTED_LDA_FORMATS = "Historic|Modern|Pioneer|Standard|Legacy|Vintage|Pauper|Premodern";
     public static Map<String, Map<String,List<List<Pair<String, Double>>>>> ldaPools = new HashMap<>();
     public static Map<String, List<Archetype>> ldaArchetypes = new HashMap<>();
 
@@ -62,6 +62,7 @@ public final class LDAModelGenetrator {
         formatStrings.add(FModel.getFormats().getHistoric().getName());
         formatStrings.add(FModel.getFormats().getModern().getName());
         formatStrings.add(FModel.getFormats().getPauper().getName());
+        formatStrings.add(FModel.getFormats().getPremodern().getName());
         formatStrings.add("Legacy");
         formatStrings.add("Vintage");
         formatStrings.add(DeckFormat.Commander.toString());
@@ -89,7 +90,7 @@ public final class LDAModelGenetrator {
                             lda = initializeFormat(FModel.getFormats().getModern());
                         } else if (format.equals(FModel.getFormats().getPauper().getName())) {
                             lda = initializeFormat(FModel.getFormats().getPauper());
-                        } else if (format != DeckFormat.Commander.toString()) {
+                        } else if (!format.equals(DeckFormat.Commander.toString())) {
                             lda = initializeFormat(FModel.getFormats().get(format));
                         }
                         CardThemedLDAIO.saveRawLDA(format, lda);
@@ -103,7 +104,7 @@ public final class LDAModelGenetrator {
                     formatMap = loadFormat(FModel.getFormats().getModern(), lda);
                 } else if (format.equals(FModel.getFormats().getPauper().getName())) {
                     formatMap = loadFormat(FModel.getFormats().getPauper(), lda);
-                } else if (format != DeckFormat.Commander.toString()) {
+                } else if (!format.equals(DeckFormat.Commander.toString())) {
                     formatMap = loadFormat(FModel.getFormats().get(format), lda);;
                 }
                 CardThemedLDAIO.saveLDA(format, formatMap);

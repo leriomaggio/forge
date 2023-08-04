@@ -67,11 +67,15 @@ public final class BagOfWords {
         legalDecks = new ArrayList<>();
         for(Deck deck:decks){
             try {
-                if (format.isDeckLegal(deck) && deck.getMain().toFlatList().size() == 60) {
+                if (format.isDeckLegal(deck)) {
+                    int deckSize = deck.getMain().toFlatList().size();
+                    if (deckSize < 60)
+                        System.out.println("WARNING: Deck has less than 60 cards in main): " + deck.getName() + "(" + deckSize + ")");
                     legalDecks.add(deck);
-                    for (PaperCard card : deck.getMain().toFlatList()) {
+                    for (PaperCard card : deck.getMain().toFlatList())
                         cardSet.add(card);
-                    }
+                } else {
+                    System.out.println("Skipping deck (Not legal): " + deck.getName());
                 }
             }catch(Exception e){
                 System.out.println("Skipping deck "+deck.getName());

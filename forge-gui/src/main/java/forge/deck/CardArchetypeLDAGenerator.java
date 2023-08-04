@@ -30,6 +30,7 @@ public final class CardArchetypeLDAGenerator {
         formatStrings.add(FModel.getFormats().getHistoric().getName());
         formatStrings.add(FModel.getFormats().getModern().getName());
         formatStrings.add(FModel.getFormats().getPauper().getName());
+        formatStrings.add(FModel.getFormats().getPremodern().getName());
         formatStrings.add("Legacy");
         formatStrings.add("Vintage");
 

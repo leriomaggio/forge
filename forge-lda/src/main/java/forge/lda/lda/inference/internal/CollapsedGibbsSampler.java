@@ -37,7 +37,7 @@ public class CollapsedGibbsSampler implements Inference {
     private int numIteration;
     
     private static final long DEFAULT_SEED = 0L;
-    private static final int DEFAULT_NUM_ITERATION = 100;
+    private static final int DEFAULT_NUM_ITERATION = 150;
     
     // ready for Gibbs sampling
     private boolean ready;

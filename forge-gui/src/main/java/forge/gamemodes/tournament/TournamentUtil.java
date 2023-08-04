@@ -53,7 +53,10 @@ public class TournamentUtil {
                     break;
                 case PAUPER_CARDGEN_DECK:
                     deck = DeckgenUtil.buildLDACArchetypeDeck(FModel.getFormats().getPauper(),true);
-                    break;    
+                    break;
+                case PREMODERN_CARDGEN_DECK:
+                    deck = DeckgenUtil.buildLDACArchetypeDeck(FModel.getFormats().getPremodern(),true);
+                    break;
                 case MODERN_COLOR_DECK:
                     deck = DeckgenUtil.getRandomColorDeck(FModel.getFormats().getModern().getFilterPrinted(),true);
                     break;
