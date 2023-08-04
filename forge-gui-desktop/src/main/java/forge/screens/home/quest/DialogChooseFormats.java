@@ -5,34 +5,37 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import forge.game.Game;
 import forge.game.GameFormat;
+import forge.game.GameFormat.FormatType;
 import forge.gui.SOverlayUtils;
 import forge.localinstance.skin.FSkinProp;
 import forge.model.FModel;
-import forge.toolbox.FButton;
-import forge.toolbox.FCheckBox;
-import forge.toolbox.FCheckBoxList;
-import forge.toolbox.FLabel;
-import forge.toolbox.FOverlay;
-import forge.toolbox.FPanel;
-import forge.toolbox.FScrollPane;
-import forge.toolbox.FSkin;
+import forge.toolbox.*;
+import forge.toolbox.FCheckBoxTree.FTreeNode;
+import forge.toolbox.FCheckBoxTree.FTreeNodeData;
 import forge.util.Localizer;
 import net.miginfocom.swing.MigLayout;
 
-public class DialogChooseFormats {
+public class DialogChooseFormats extends FChooseDialog {
 
 	private List<GameFormat> selectedFormats = new ArrayList<>() ;
 	private boolean wantReprints = true;
+	private boolean includePromoCards = false;
 	private Runnable okCallback;
+	final Localizer localizer = Localizer.getInstance();
 
 	private final List<FCheckBox> choices = new ArrayList<>();
-	final Localizer localizer = Localizer.getInstance();
 	private final FCheckBox cbWantReprints = new FCheckBox(localizer.getMessage("cbWantReprints"));
+	private final FCheckBox cbWantPromoCards = new FCheckBox(localizer.getMessage("cbWantPromoCards"));
+	private final FHtmlViewer selectedFormatsInfo = new FHtmlViewer();
+	private final FScrollPane scrollOutput = new FScrollPane(this.selectedFormatsInfo, false);
+	private final FCheckBoxTree checkBoxTree = new FCheckBoxTree();
 
 	public DialogChooseFormats(){
 		this(null);
@@ -40,30 +43,32 @@ public class DialogChooseFormats {
 
 	public DialogChooseFormats(Set<GameFormat> preselectedFormats) {
 
-		List<FCheckBox> sanctioned = new ArrayList<>();
-		List<FCheckBox> casual = new ArrayList<>();
-		List<FCheckBox> archived = new ArrayList<>();
+		initFormatsCheckbox(preselectedFormats);
 
-		for (GameFormat format : FModel.getFormats().getOrderedList()){
-			FCheckBox box = new FCheckBox(format.getName());
-			box.setName(format.getName());
-			switch (format.getFormatType()){
-				case SANCTIONED:
-					sanctioned.add(box);
-					break;
-				case ARCHIVED:
-					archived.add(box);
-					break;
-				case CUSTOM:
-				case CASUAL:
-				case DIGITAL:
-				default:
-					casual.add(box);
-					break;
-
-			}
-			box.setSelected(null != preselectedFormats && preselectedFormats.contains(format));
-		}
+//		List<FCheckBox> sanctioned = new ArrayList<>();
+//		List<FCheckBox> casual = new ArrayList<>();
+//		List<FCheckBox> archived = new ArrayList<>();
+//
+//		for (GameFormat format : FModel.getFormats().getOrderedList()){
+//			FCheckBox box = new FCheckBox(format.getName());
+//			box.setName(format.getName());
+//			switch (format.getFormatType()){
+//				case SANCTIONED:
+//					sanctioned.add(box);
+//					break;
+//				case ARCHIVED:
+//					archived.add(box);
+//					break;
+//				case CUSTOM:
+//				case CASUAL:
+//				case DIGITAL:
+//				default:
+//					casual.add(box);
+//					break;
+//
+//			}
+//			box.setSelected(null != preselectedFormats && preselectedFormats.contains(format));
+//		}
 
 		FPanel panel = new FPanel(new MigLayout("insets 0, gap 0, center, wrap 3"));
 		panel.setOpaque(false);
@@ -71,10 +76,10 @@ public class DialogChooseFormats {
 
 		panel.add(new FLabel.Builder().text(localizer.getMessage("lblChooseFormats")).fontSize(18).build(), "center, span, wrap, gaptop 10");
 
-		String constraints = "aligny top";
-		panel.add(makeCheckBoxList(sanctioned, localizer.getMessage("lblSanctioned"), true), constraints);
-		panel.add(makeCheckBoxList(casual, localizer.getMessage("lblOther"), false), constraints);
-		panel.add(makeCheckBoxList(archived, localizer.getMessage("lblArchived"), false), constraints);
+//		String constraints = "aligny top";
+//		panel.add(makeCheckBoxList(sanctioned, localizer.getMessage("lblSanctioned"), true), constraints);
+//		panel.add(makeCheckBoxList(casual, localizer.getMessage("lblOther"), false), constraints);
+//		panel.add(makeCheckBoxList(archived, localizer.getMessage("lblArchived"), false), constraints);
 
 		final JPanel overlay = FOverlay.SINGLETON_INSTANCE.getPanel();
 		overlay.setLayout(new MigLayout("insets 0, gap 0, wrap, ax center, ay center"));
@@ -115,6 +120,45 @@ public class DialogChooseFormats {
 		panel.getRootPane().setDefaultButton(btnOk);
 		SOverlayUtils.showOverlay();
 
+	}
+
+	private void initFormatsCheckbox(Set<GameFormat> preselectedFormats) {
+		// Filter List first
+		FTreeNode rootNode = null;
+		for (FormatType formatType : FormatType.values()){
+			TreeMap<FTreeNodeData, List<FTreeNodeData>> formatTreeData = this.getFormatTreeData(formatType, preselectedFormats);
+			if (formatTreeData != null) {
+				if (rootNode == null)
+					rootNode = this.checkBoxTree.setTreeData(formatTreeData);
+				else
+					this.checkBoxTree.addTreeData(rootNode, formatTreeData);
+			}
+		}
+
+		if (FModel.getFormats().allFormatsEnabled()){
+			// Process Archived Formats
+
+		}
+
+
+	}
+
+	private TreeMap<FTreeNodeData, List<FTreeNodeData>> getFormatTreeData(
+			FormatType formatType, Set<GameFormat> preselected) {
+		List<FTreeNodeData> formatNodesData = new ArrayList<>();
+		for (GameFormat format: FModel.getFormats().getFormatTypeList(formatType)){
+			FTreeNodeData formatNodeData = new FTreeNodeData(format, format.getName(), format.getName());
+			formatNodeData.isEnabled = true;
+			formatNodeData.isSelected = ((preselected != null) && (preselected.contains(format)));
+			formatNodesData.add(formatNodeData);
+		}
+		if (formatNodesData.size() == 0)
+			return null;
+
+		FTreeNodeData formatTypeInfo = new FTreeNodeData(formatType);
+		TreeMap<FTreeNodeData, List<FTreeNodeData>> formatTreeData = new TreeMap<>();
+		formatTreeData.put(formatTypeInfo, formatNodesData);
+		return formatTreeData;
 	}
 
 	public void setOkCallback(Runnable onOk) {

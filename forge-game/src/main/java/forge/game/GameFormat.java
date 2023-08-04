@@ -583,7 +583,6 @@ public class GameFormat implements Comparable<GameFormat> {
         );
 
         private Map<String, List<GameFormat>> archivedFormatGroups;
-        private final String CATEGORY_SEPARATOR = "-";
 
         /**
          * This method returns Archived formats organised per-Category, that is:
@@ -603,15 +602,7 @@ public class GameFormat implements Comparable<GameFormat> {
                 for (GameFormat.FormatSubType formatSubType : this.archivedSubtypeCategories) {
                     List<GameFormat> subtypeFormats = this.getArchivedList(formatSubType);
                     for (GameFormat format : subtypeFormats) {
-                        String key = String.format("%s%s%s",
-                                format.getFormatType().name(),
-                                CATEGORY_SEPARATOR,
-                                format.getFormatSubType().name());
-                        if ((formatSubType != FormatSubType.BLOCK) || !(format.getName().endsWith("Block"))) {
-                            String[] namePrefixes = StringUtils.splitByWholeSeparator(format.getName(), " (");
-                            // getting common prefix name as per last-level grouping
-                            key += String.format(": %s", namePrefixes[0]);
-                        }
+                        String key = getFormatSubTypeKey(formatSubType, format);
                         archivedFormatGroups.putIfAbsent(key, new ArrayList<>());
                         List<GameFormat> formatsPerKey = archivedFormatGroups.get(key);
                         formatsPerKey.add(format);
@@ -619,6 +610,20 @@ public class GameFormat implements Comparable<GameFormat> {
                 }
             }
             return archivedFormatGroups;
+        }
+
+        private final String CATEGORY_SEPARATOR = "-";
+        private String getFormatSubTypeKey(FormatSubType formatSubType, GameFormat format) {
+            String key = String.format("%s%s%s",
+                    format.getFormatType().name(),
+                    CATEGORY_SEPARATOR,
+                    format.getFormatSubType().name());
+            if ((formatSubType != FormatSubType.BLOCK) || !(format.getName().endsWith("Block"))) {
+                String[] namePrefixes = StringUtils.splitByWholeSeparator(format.getName(), " (");
+                // getting common prefix name as per last-level grouping
+                key += String.format(": %s", namePrefixes[0]);
+            }
+            return key;
         }
 
         public Iterable<GameFormat> getMainBlockFormatsList() {

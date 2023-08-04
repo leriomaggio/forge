@@ -9,7 +9,6 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import forge.Singletons;
 import forge.toolbox.*;
 import forge.card.CardEdition;
 import forge.game.GameFormat;
@@ -21,7 +20,7 @@ import net.miginfocom.swing.MigLayout;
 import forge.toolbox.FCheckBoxTree.FTreeNode;
 import forge.toolbox.FCheckBoxTree.FTreeNodeData;
 
-public class DialogChooseSets {
+public class DialogChooseSets extends FChooseDialog {
 
 	private final List<String> selectedSets = new ArrayList<>();
 	private boolean wantReprints = true;
@@ -137,7 +136,7 @@ public class DialogChooseSets {
 			editionTypeTreeData.put(new FTreeNodeData(editionType), editionPerTypeNodes);
 			allEditionTypes.put(editionType, enabledEditionsOfTypeCounter);
 		}
-		this.checkBoxTree.setTreeData(editionTypeTreeData);
+		this.checkBoxTree.setTreeDataAndModel(editionTypeTreeData);
 
 		// === 0. MAIN PANEL WINDOW ===
 		// ===================================================================
@@ -266,7 +265,7 @@ public class DialogChooseSets {
 
 		ButtonGroup formatButtonGroup = new ButtonGroup();
 		List<GameFormat> gameFormats = new ArrayList<>();
-		FModel.getFormats().getSanctionedList().forEach(gameFormats::add);
+		FModel.getFormats().getFilterListWithAllowedSets().forEach(gameFormats::add);
 		Map<String, FRadioButton> formatButtonGroupMap = new HashMap<>();
 		gameFormats.forEach(item -> {
 			FRadioButton button = new FRadioButton(item.getName());
@@ -535,34 +534,6 @@ public class DialogChooseSets {
 		mainDialogPanel.getRootPane().setDefaultButton(btnOk);
 		SOverlayUtils.showOverlay();
 	}
-
-	private int getMainDialogWidth() {
-		int winWidth = Singletons.getView().getFrame().getSize().width;
-		int[] sizeBoundaries = new int[] {800, 1024, 1280, 2048};
-		return calculateRelativePanelDimension(winWidth, 90, sizeBoundaries);
-	}
-
-	// So far, not yet used, but left here just in case
-	private int getMainDialogHeight() {
-		int winHeight = Singletons.getView().getFrame().getSize().height;
-		int[] sizeBoundaries = new int[] {600, 720, 780, 1024};
-		return calculateRelativePanelDimension(winHeight, 40, sizeBoundaries);
-	}
-
-	private int calculateRelativePanelDimension(int winDim, int ratio, int[] sizeBoundaries){
-		int relativeWinDimension = winDim * ratio / 100;
-		if (winDim < sizeBoundaries[0])
-			return relativeWinDimension;
-		for (int i = 1; i < sizeBoundaries.length; i++){
-			int left = sizeBoundaries[i-1];
-			int right = sizeBoundaries[i];
-			if (winDim <= left || winDim > right)
-				continue;
-			return Math.min(right*90/100, relativeWinDimension);
-		}
-		return sizeBoundaries[sizeBoundaries.length - 1] * 90 / 100;  // Max Size fixed
-	}
-
 
 	public void setOkCallback(Runnable onOk) {
 		okCallback = onOk;

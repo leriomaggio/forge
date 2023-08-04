@@ -99,8 +99,21 @@ public class FCheckBoxTree extends JTree {
                 this.add(new FTreeNode(dataObject));
         }
 
+        public void add(TreeMap<FTreeNodeData, List<FTreeNodeData>> nodesMap) {
+            for (FTreeNodeData keyNodeInfo : nodesMap.keySet()) {
+                FTreeNode keyNode = new FTreeNode(keyNodeInfo);
+                this.add(keyNode);
+                for (FTreeNodeData childNodeInfo : nodesMap.get(keyNodeInfo))
+                    keyNode.add(childNodeInfo);
+            }
+        }
+
         public void add(FTreeNodeData dataObject){
             this.add(new FTreeNode(dataObject));
+        }
+
+        public void addNode(FTreeNode node){
+            this.add(node);
         }
 
         public FTreeNodeData getUserObject(){
@@ -295,7 +308,17 @@ public class FCheckBoxTree extends JTree {
      * (not displayed), whilst each FTreeNodeInfo in the corresponding lists will be treated as  as child leaf nodes.
      *
      */
-    public void setTreeData(TreeMap<FTreeNodeData, List<FTreeNodeData>> nodesMap) {
+    public void setTreeDataAndModel(TreeMap<FTreeNodeData, List<FTreeNodeData>> nodesMap) {
+        FTreeNode rootNode = setTreeData(nodesMap);
+        setTreeModel(rootNode);
+    }
+
+    public void setTreeModel(FTreeNode rootNode) {
+        DefaultTreeModel defaultTreeModel = new DefaultTreeModel(rootNode);
+        this.setModel(defaultTreeModel);
+    }
+
+    public FTreeNode setTreeData(TreeMap<FTreeNodeData, List<FTreeNodeData>> nodesMap) {
         FTreeNode rootNode = new FTreeNode(new FTreeNodeData(FCheckBoxTree.ROOTNODE_LABEL));
         for (FTreeNodeData keyNodeInfo : nodesMap.keySet()) {
             FTreeNode keyNode = new FTreeNode(keyNodeInfo);
@@ -303,8 +326,16 @@ public class FCheckBoxTree extends JTree {
             for (FTreeNodeData childNodeInfo : nodesMap.get(keyNodeInfo))
                 keyNode.add(childNodeInfo);
         }
-        DefaultTreeModel defaultTreeModel = new DefaultTreeModel(rootNode);
-        this.setModel(defaultTreeModel);
+        return rootNode;
+    }
+
+    public void addTreeData(FTreeNode rootNode, TreeMap<FTreeNodeData, List<FTreeNodeData>> nodesMap) {
+        for (FTreeNodeData keyNodeInfo : nodesMap.keySet()) {
+            FTreeNode keyNode = new FTreeNode(keyNodeInfo);
+            rootNode.add(keyNode);
+            for (FTreeNodeData childNodeInfo : nodesMap.get(keyNodeInfo))
+                keyNode.add(childNodeInfo);
+        }
     }
 
     // Set an option in the cell rendered to enable or disable the visualisation of child nodes count
