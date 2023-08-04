@@ -155,9 +155,6 @@ public class CardFactory {
         copy.setXManaCostPaidByColor(original.getXManaCostPaidByColor());
         copy.setKickerMagnitude(original.getKickerMagnitude());
 
-        for (OptionalCost cost : original.getOptionalCostsPaid()) {
-            copy.addOptionalCostPaid(cost);
-        }
         if (targetSA.isBestow()) {
             copy.animateBestow();
         }
@@ -186,7 +183,6 @@ public class CardFactory {
             copySA = getCopiedTriggeredAbility((WrappedAbility)targetSA, c, controller);
         } else {
             copySA = targetSA.copy(c, controller, false);
-            c.setCastSA(copySA);
             // need to copy keyword
             if (targetSA.getKeyword() != null) {
                 KeywordInterface kw = targetSA.getKeyword().copy(c, false);
@@ -206,13 +202,15 @@ public class CardFactory {
         if (copySA instanceof Spell) {
             Spell spell = (Spell) copySA;
             spell.setCastFaceDown(false);
+            c.setCastSA(copySA);
         }
 
+        // mana is not copied
+        copySA.clearManaPaid();
         //remove all costs
         if (!copySA.isTrigger()) {
             copySA.setPayCosts(new Cost("", targetSA.isAbility()));
         }
-        copySA.setActivatingPlayer(controller);
 
         return copySA;
     }
@@ -668,7 +666,7 @@ public class CardFactory {
             return null;
         }
 
-        return new WrappedAbility(sa.getTrigger(), sa.getWrappedAbility().copy(newHost, controller, false), sa.isOptionalTrigger() ? controller : null);
+        return new WrappedAbility(sa.getTrigger(), sa.getWrappedAbility().copy(newHost, controller, false), sa.getDecider());
     }
 
     public static CardCloneStates getCloneStates(final Card in, final Card out, final CardTraitBase sa) {
@@ -680,7 +678,7 @@ public class CardFactory {
         List<String> creatureTypes = null;
         final CardCloneStates result = new CardCloneStates(in, sa);
 
-        final String newName = sa.getParamOrDefault("NewName", null);
+        final String newName = sa.getParam("NewName");
         ColorSet colors = null;
 
         if (sa.hasParam("AddTypes")) {
@@ -753,6 +751,19 @@ public class CardFactory {
             final CardState ret2 = new CardState(out, CardStateName.Transformed);
             ret2.copyFrom(in.getState(CardStateName.Transformed), false, sa);
             result.put(CardStateName.Transformed, ret2);
+        } else if (in.isSplitCard()) {
+            // for split cards, copy all three states
+            final CardState ret1 = new CardState(out, CardStateName.Original);
+            ret1.copyFrom(in.getState(CardStateName.Original), false, sa);
+            result.put(CardStateName.Original, ret1);
+
+            final CardState ret2 = new CardState(out, CardStateName.LeftSplit);
+            ret2.copyFrom(in.getState(CardStateName.LeftSplit), false, sa);
+            result.put(CardStateName.LeftSplit, ret2);
+
+            final CardState ret3 = new CardState(out, CardStateName.RightSplit);
+            ret3.copyFrom(in.getState(CardStateName.RightSplit), false, sa);
+            result.put(CardStateName.RightSplit, ret3);
         } else {
             // in all other cases just copy the current state to original
             final CardState ret = new CardState(out, CardStateName.Original);
@@ -768,6 +779,7 @@ public class CardFactory {
             if (sa.hasParam("KeepName")) {
                 state.setName(originalState.getName());
             } else if (newName != null) {
+                // convert NICKNAME descriptions?
                 state.setName(newName);
             }
 
@@ -784,7 +796,7 @@ public class CardFactory {
             }
 
             if (sa.hasParam("RemoveCardTypes")) {
-                state.removeCardTypes();
+                state.removeCardTypes(sa.hasParam("RemoveSubTypes"));
             }
 
             state.addType(types);

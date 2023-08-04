@@ -3843,8 +3843,10 @@
 		  "cardText": "White"
 		}
 	]
-	}]
-},{
+	}
+	]
+},
+{
   "name":"Bird",
   "description":"Birds Of A Feather",
   "spriteAtlas":"maps/tileset/buildings.atlas",
@@ -3863,8 +3865,150 @@
 		  "cardText": "Bird"
 		}
 	  ]
-	}]
-},{
+	}
+	]
+},
+{
+  "name":"Nobles",
+  "description":"High Court",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"NobleShop",
+  "rewards": [
+    {
+      "count":4,
+	  "subTypes": ["Noble"]
+    },
+	{
+      "count":4,
+      "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":4,
+		  "cardText": "Monarch"
+		}
+	  ]
+	}
+	]
+},
+{
+  "name":"Saga",
+  "description":"Relive History",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"SagaShop",
+  "rewards": [
+    {
+	  "count":8,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Saga"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Saga"
+		}
+	  ]
+	}
+	]
+},
+{
+  "name":"Giant",
+  "description":"Gigantic Discounts",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"GiantShop",
+  "rewards": [
+    {
+	  "count":8,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Giant"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Giant"
+		}
+	  ]
+	}
+	]
+},
+{
+  "name":"SnowShop",
+  "description":"Chilly Cards",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"SnowShop",
+  "rewards": [
+	{
+	  "count":8,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "superTypes": ["Snow"]
+		},
+		{
+		  "count":2,
+		  "cardText": "Snow"
+		}
+	  ]
+	}
+	]
+},
+{
+  "name":"LargeSeaCreatures",
+  "description":"Cards From The Deep",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"LargeSeaCreaturesShop",
+  "rewards": [
+    {
+      "count":2,
+      "subTypes": ["Serpent"]
+    },
+    {
+      "count":2,
+      "subTypes": ["Kraken"]
+    },
+    {
+      "count":2,
+      "subTypes": ["Leviathan"]
+    },
+    {
+      "count":2,
+      "subTypes": ["Octopus"]
+	}
+	]
+},
+{
+  "name":"FlipShop",
+  "description":"Two For The Price of One",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"FlipShop",
+  "rewards": [
+    {
+      "count":1,
+      "cardText": "Flip it"
+    },
+    {
+      "count":7,
+      "cardText": "Transform"
+    }
+	]
+},
+{
+  "name":"Battle",
+  "description":"Battles of the Ages",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"BattleShop",
+  "rewards": [
+    {
+      "count":8,
+      "cardTypes": ["Battle"]
+    }
+    ]
+},
+{
   "name":"Bird4Blue",
   "description":"Aven Windreaders",
   "spriteAtlas":"maps/tileset/buildings.atlas",
@@ -3904,6 +4048,43 @@
 },{
   "name":"Bird4White",
   "description":"Wing Stop",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"BirdShop",
+  "overlaySprite":"Overlay4White",
+  "rewards": [
+    {
+	  "count":4,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Bird"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Bird"
+		}
+	  ]
+	},
+	{
+	  "count":4,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Bird"],
+		  "colors": ["white"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Bird",
+		  "colors": ["white"]
+		}
+	  ]
+	}]
+},{
+  "name":"Bird4Azorius",
+  "description":"Eerie Well Breds",
   "spriteAtlas":"maps/tileset/buildings.atlas",
   "sprite":"BirdShop",
   "overlaySprite":"Overlay4White",
@@ -4461,6 +4642,182 @@
 	  ]
 	}
 	]
+		},{
+  "name":"SmallCats",
+  "description":"The Feline Kingdom",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"CatShop",
+  "rewards": [
+  {
+	  "count":8,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Cat"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Cat"
+		}
+	  ]
+	}
+	]
+			},{
+  "name":"Shapeshifter",
+  "description":"Proteus' Endless Shapes",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"ShapeshifterShop",
+  "rewards": [
+  {
+	  "count":8,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Shapeshifter"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Shapeshifter"
+		}
+	  ]
+	}
+	]		
+},
+{
+  "name":"Gods",
+  "description":"Al's Dose of Apotheosis",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"GodMinigodShop",
+  "rewards": [
+  {
+	  "count":4,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["God"]
+		},
+		{
+		  "count":1,
+		  "cardText": "God"
+		}
+	  ]
+	},
+	{
+	  "count":4,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Demigod"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Demigod"
+		}
+	  ]
+	  }
+	  ]	  
+},
+{
+  "name":"Insects",
+  "description":"Grist's Bug Greenhouse",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"InsectShop",
+  "rewards": [
+  {
+	  "count":8,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Insect"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Insect"
+		}
+	  ]
+	}
+	]
+},
+{
+  "name":"Horrors",
+  "description":"Horrific Horrors",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"HorrorShop",
+  "rewards": [
+  {
+	  "count":8,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Horror"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Horror"
+		}
+	  ]
+	}
+	]
+},
+{
+  "name":"Mutants",
+  "description":"Marching Mutants",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"MutantShop",
+  "rewards": [
+    {
+	  "count":4,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Mutant"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Mutant"
+		}
+	  ]
+	},
+	{
+	  "count":4,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "cardText": "Mutate"
+		}
+	  ]
+	}
+]
+},
+{
+  "name":"Eldrazi",
+  "description":"Eldritch Emissaries",
+  "spriteAtlas":"maps/tileset/buildings.atlas",
+  "sprite":"EldraziShop",
+  "rewards": [
+  {
+	  "count":8,
+	  "type":"Union",
+	  "cardUnion": [
+		{
+		  "count":1,
+		  "subTypes": ["Eldrazi"]
+		},
+		{
+		  "count":1,
+		  "cardText": "Eldrazi"
+		}
+	  ]
+	}
+	]
 },{
   "name":"Pirate",
   "description":"Marauding Looters",
@@ -4929,7 +5286,7 @@
 		},
 		{
 		  "count":1,
-		  "cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|for mirrodin"
+		  "cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|for mirrodin|compleated"
 		}
 	  ]
 	}]
@@ -4952,7 +5309,7 @@
 	{
 		"count":1,
 		"colors":["white"],
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|compleated"
 	}]},
 	{
 		"count":3,
@@ -4964,7 +5321,7 @@
 		},
 		{
 		"count":1,
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|compleated"
 		}
 	]}]},
 {                                    
@@ -4985,7 +5342,7 @@
 	{
 		"count":1,
 		"colors":["blue"],
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|compleated"
 	}]},
 	{
 		"count":3,
@@ -4997,7 +5354,7 @@
 		},
 		{
 		"count":1,
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|compleated"
 		}
 	]}]},
 {                                    
@@ -5018,7 +5375,7 @@
 	{
 		"count":1,
 		"colors":["green"],
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|compleated"
 	}]},
 	{
 		"count":3,
@@ -5030,7 +5387,7 @@
 		},
 		{
 		"count":1,
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|compleated"
 		}
 	]}]},
 {                                    
@@ -5051,7 +5408,7 @@
 	{
 		"count":1,
 		"colors":["red"],
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|for mirrodin"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|for mirrodin|compleated"
 	}]},
 	{
 		"count":3,
@@ -5063,7 +5420,7 @@
 		},
 		{
 		"count":1,
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|for mirrodin"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|for mirrodin|compleated"
 		}
 	]}]},
 {                                    
@@ -5084,7 +5441,7 @@
 	{
 		"count":1,
 		"colors":["black"],
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|compleated"
 	}]},
 	{
 		"count":3,
@@ -5096,7 +5453,7 @@
 		},
 		{
 		"count":1,
-		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon"
+		"cardText": "infect|oil|proliferate|incubate|toxic|corrupted|phyrexian|poison|living weapon|compleated"
 		}
 	]}]},
 {

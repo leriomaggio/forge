@@ -133,7 +133,7 @@ public class TokenAi extends SpellAbilityAi {
             }
         }
         if ((ph.isPlayerTurn(ai) || ph.getPhase().isBefore(PhaseType.COMBAT_DECLARE_ATTACKERS))
-                && !sa.hasParam("ActivationPhases") && !sa.hasParam("PlayerTurn") && !SpellAbilityAi.isSorcerySpeed(sa, ai)
+                && !sa.hasParam("ActivationPhases") && !sa.hasParam("PlayerTurn") && !isSorcerySpeed(sa, ai)
                 && !haste && !pwMinus) {
             return false;
         }
@@ -268,12 +268,6 @@ public class TokenAi extends SpellAbilityAi {
             }
         }
 
-        if (mandatory) {
-            // Necessary because the AI goes into this method twice, first to set up targets (with mandatory=true)
-            // and then the second time to confirm the trigger (where mandatory may be set to false).
-            return true;
-        }
-
         Card actualToken = spawnToken(ai, sa);
         String tokenPower = sa.getParamOrDefault("TokenPower", actualToken.getBasePowerString());
         String tokenToughness = sa.getParamOrDefault("TokenToughness", actualToken.getBaseToughnessString());
@@ -289,9 +283,15 @@ public class TokenAi extends SpellAbilityAi {
                     sa.setXManaCostPaid(x);
                 }
             }
-            if (x <= 0) {
+            if (x <= 0 && !mandatory) {
                 return false;
             }
+        }
+
+        if (mandatory) {
+            // Necessary because the AI goes into this method twice, first to set up targets (with mandatory=true)
+            // and then the second time to confirm the trigger (where mandatory may be set to false).
+            return true;
         }
 
         if ("OnlyOnAlliedAttack".equals(sa.getParam("AILogic"))) {

@@ -22,6 +22,7 @@ import forge.game.phase.PhaseType;
 import forge.game.player.Player;
 import forge.game.spellability.Spell;
 import forge.game.spellability.SpellAbility;
+import forge.game.spellability.TargetChoices;
 import forge.game.zone.ZoneType;
 import forge.util.MyRandom;
 import forge.util.TextUtil;
@@ -415,7 +416,7 @@ public class ComputerUtilCost {
      *            the source
      * @return true, if successful
      */
-    public static boolean checkTapTypeCost(final Player ai, final Cost cost, final Card source, final SpellAbility sa) {
+    public static boolean checkTapTypeCost(final Player ai, final Cost cost, final Card source, final SpellAbility sa, final CardCollection alreadyTapped) {
         if (cost == null) {
             return true;
         }
@@ -442,8 +443,13 @@ public class ComputerUtilCost {
                             return ComputerUtilCard.evaluateCreature(c) >= vehicleValue;
                         }
                     }); // exclude creatures >= vehicle
-                    return ComputerUtil.chooseTapTypeAccumulatePower(ai, type, sa, true,
-                            Integer.parseInt(totalP), exclude) != null;
+                    exclude.addAll(alreadyTapped);
+                    CardCollection tappedCrew = ComputerUtil.chooseTapTypeAccumulatePower(ai, type, sa, true, Integer.parseInt(totalP), exclude);
+                    if (tappedCrew != null) {
+                        alreadyTapped.addAll(tappedCrew);
+                        return true;
+                    }
+                    return false;
                 }
 
                 // check if we have a valid card to tap (e.g. Jaspera Sentinel)
@@ -479,36 +485,6 @@ public class ComputerUtilCost {
         }
         return true;
     }
-
-    /**
-     * <p>
-     * shouldPayCost.
-     * </p>
-     *
-     * @param hostCard
-     *            a {@link forge.game.card.Card} object.
-     * @param cost
-     * @return a boolean.
-     */
-    @Deprecated
-    public static boolean shouldPayCost(final Player ai, final Card hostCard, final Cost cost) {
-        for (final CostPart part : cost.getCostParts()) {
-            if (part instanceof CostPayLife) {
-                if (!ai.cantLoseForZeroOrLessLife()) {
-                    continue;
-                }
-                final int remainingLife = ai.getLife();
-                final int lifeCost = part.convertAmount();
-                if ((remainingLife - lifeCost) < 10) {
-                    return false; //Don't pay life if it would put AI under 10 life
-                } else if ((remainingLife / lifeCost) < 4) {
-                    return false; //Don't pay life if it is more than 25% of current life
-                }
-            }
-        }
-
-        return true;
-    } // shouldPayCost()
 
     /**
      * <p>
@@ -580,22 +556,15 @@ public class ComputerUtilCost {
             }
         }
 
-        // KLD vehicle
-        if (sa.hasParam("Crew")) {  // put under checkTapTypeCost?
-            for (final CostPart part : sa.getPayCosts().getCostParts()) {
-                if (part instanceof CostTapType && part.getType().contains("+withTotalPowerGE")) {
-                    return new AiCostDecision(player, sa, false).visit((CostTapType)part) != null;
-                }
-            }
-        }
-
         // Ward - will be accounted for when rechecking a targeted ability
-        if (!sa.isTrigger() && sa.usesTargeting() && (!sa.isSpell() || !cannotBeCountered)) {
-            for (Card tgt : sa.getTargets().getTargetCards()) {
-                if (tgt.hasKeyword(Keyword.WARD) && tgt.isInPlay() && tgt.getController().isOpponentOf(sa.getHostCard().getController())) {
-                    Cost wardCost = ComputerUtilCard.getTotalWardCost(tgt);
-                    if (wardCost.hasManaCost()) {
-                        extraManaNeeded += wardCost.getTotalMana().getCMC();
+        if (!sa.isTrigger() && (!sa.isSpell() || !cannotBeCountered)) {
+            for (TargetChoices tc : sa.getAllTargetChoices()) {
+                for (Card tgt : tc.getTargetCards()) {
+                    if (tgt.hasKeyword(Keyword.WARD) && tgt.isInPlay() && tgt.getController().isOpponentOf(sa.getHostCard().getController())) {
+                        Cost wardCost = ComputerUtilCard.getTotalWardCost(tgt);
+                        if (wardCost.hasManaCost()) {
+                            extraManaNeeded += wardCost.getTotalMana().getCMC();
+                        }
                     }
                 }
             }

@@ -59,6 +59,7 @@ public class GameFormat implements Comparable<GameFormat> {
         BLOCK,
         STANDARD,
         EXTENDED,
+        PAUPER,
         PIONEER,
         MODERN,
         LEGACY,
@@ -383,6 +384,7 @@ public class GameFormat implements Comparable<GameFormat> {
             coreFormats.add("Brawl.txt");
             coreFormats.add("Oathbreaker.txt");
             coreFormats.add("Premodern.txt");
+            coreFormats.add("Pauper.txt");
         }
 
         public Reader(File forgeFormats, File customFormats, boolean includeArchived) {
@@ -692,6 +694,8 @@ public class GameFormat implements Comparable<GameFormat> {
         }
 
         public GameFormat getPremodern() { return this.map.get("Premodern"); }
+
+        public GameFormat getPauper() { return this.map.get("Pauper"); }
 
         public GameFormat getFormat(String format) {
             return this.map.get(format);

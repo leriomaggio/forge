@@ -436,6 +436,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
 
     @Override
     public Integer announceRequirements(final SpellAbility ability, final String announce) {
+        final Card host = ability.getHostCard();
         int max = Integer.MAX_VALUE;
         boolean canChooseZero = true;
         Cost cost = ability.getPayCosts();
@@ -443,7 +444,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         if ("X".equals(announce)) {
             canChooseZero = !ability.hasParam("XCantBe0");
             if (ability.hasParam("XMaxLimit")) {
-                max = Math.min(max, AbilityUtils.calculateAmount(ability.getHostCard(), ability.getParam("XMaxLimit"), ability));
+                max = Math.min(max, AbilityUtils.calculateAmount(host, ability.getParam("XMaxLimit"), ability));
             }
             if (cost != null) {
                 Integer costX = cost.getMaxForNonManaX(ability, player, false);
@@ -456,6 +457,10 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
             }
         }
         final int min = canChooseZero ? 0 : 1;
+
+        if (ability.hasParam("AnnounceMax")) {
+            max = Math.min(max, AbilityUtils.calculateAmount(host, ability.getParam("AnnounceMax"), ability));
+        }
 
         if (ability.usesTargeting()) {
             // if announce is used as min targets, check what the max possible number would be
@@ -471,14 +476,14 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
                 ability.getParamOrDefault("AnnounceTitle", announce);
         if (cost.isMandatory()) {
             return chooseNumber(ability, localizer.getMessage("lblChooseAnnounceForCard", announceTitle,
-                    CardTranslation.getTranslatedName(ability.getHostCard().getName())), min, max);
+                    CardTranslation.getTranslatedName(host.getName())), min, max);
         }
         if ("NumTimes".equals(announce)) {
             return getGui().getInteger(localizer.getMessage("lblHowManyTimesToPay", ability.getPayCosts().getTotalMana(),
-                    CardTranslation.getTranslatedName(ability.getHostCard().getName())), min, max, min + 9);
+                    CardTranslation.getTranslatedName(host.getName())), min, max, min + 9);
         }
         return getGui().getInteger(localizer.getMessage("lblChooseAnnounceForCard", announceTitle,
-                CardTranslation.getTranslatedName(ability.getHostCard().getName())), min, max, min + 9);
+                CardTranslation.getTranslatedName(host.getName())), min, max, min + 9);
     }
 
     @Override
@@ -827,7 +832,13 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
             }
         }
         if (GuiBase.getInterface().isLibgdxPort()) {
-            return this.getGui().confirm(wrapper.getView().getHostCard(), buildQuestion.toString().replaceAll("\n", " "));
+            CardView cardView;
+            SpellAbilityView spellAbilityView = wrapper.getView();
+            if (spellAbilityView != null) //updated view
+                cardView = spellAbilityView.getHostCard();
+            else
+                cardView = wrapper.getCardView();
+            return this.getGui().confirm(cardView, buildQuestion.toString().replaceAll("\n", " "));
         } else {
             final InputConfirm inp = new InputConfirm(this, buildQuestion.toString(), wrapper);
             inp.showAndWait();
@@ -1295,7 +1306,6 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         // occurrences of each
         Map<String, Integer> typesInDeck = Maps.newHashMap();
 
-        // TODO JAVA 8 use getOrDefault
         for (Card c : player.getAllCards()) {
             // Changeling are all creature types, they are not interesting for
             // counting creature types
@@ -1319,10 +1329,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
             }
 
             for (String type : c.getType().getCreatureTypes()) {
-                Integer count = typesInDeck.get(type);
-                if (count == null) {
-                    count = 0;
-                }
+                Integer count = typesInDeck.getOrDefault(type, 0);
                 typesInDeck.put(type, count + 1);
             }
             // also take into account abilities that generate tokens
@@ -1335,10 +1342,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
                     for (String token : sa.getParam("TokenScript").split(",")) {
                         Card protoType = TokenInfo.getProtoType(token, sa, null);
                         for (String type : protoType.getType().getCreatureTypes()) {
-                            Integer count = typesInDeck.get(type);
-                            if (count == null) {
-                                count = 0;
-                            }
+                            Integer count = typesInDeck.getOrDefault(type, 0);
                             typesInDeck.put(type, count + 1);
                         }
                     }
@@ -1354,10 +1358,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
                         for (String token : sa.getParam("TokenScript").split(",")) {
                             Card protoType = TokenInfo.getProtoType(token, sa, null);
                             for (String type : protoType.getType().getCreatureTypes()) {
-                                Integer count = typesInDeck.get(type);
-                                if (count == null) {
-                                    count = 0;
-                                }
+                                Integer count = typesInDeck.getOrDefault(type, 0);
                                 typesInDeck.put(type, count + 1);
                             }
                         }
@@ -1366,10 +1367,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
             }
             // special rule for Fabricate and Servo
             if (c.hasStartOfKeyword(Keyword.FABRICATE.toString())) {
-                Integer count = typesInDeck.get("Servo");
-                if (count == null) {
-                    count = 0;
-                }
+                Integer count = typesInDeck.getOrDefault("Servo", 0);
                 typesInDeck.put("Servo", count + 1);
             }
         }
@@ -1426,7 +1424,13 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
     public boolean confirmReplacementEffect(final ReplacementEffect replacementEffect, final SpellAbility effectSA,
                                             GameEntity affected, final String question) {
         if (GuiBase.getInterface().isLibgdxPort()) {
-            return this.getGui().confirm(effectSA.getView().getHostCard(), question.replaceAll("\n", " "));
+            CardView cardView;
+            SpellAbilityView spellAbilityView = effectSA.getView();
+            if (spellAbilityView != null) //updated view
+                cardView = spellAbilityView.getHostCard();
+            else //fallback
+                cardView = effectSA.getCardView();
+            return this.getGui().confirm(cardView, question.replaceAll("\n", " "));
         } else {
             final InputConfirm inp = new InputConfirm(this, question, effectSA);
             inp.showAndWait();
@@ -1674,13 +1678,6 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
     }
 
     @Override
-    public Card chooseProtectionShield(final GameEntity entityBeingDamaged, final List<String> options,
-                                       final Map<String, Card> choiceMap) {
-        final String title = entityBeingDamaged + " - " + localizer.getMessage("lblSelectPreventionShieldToUse");
-        return choiceMap.get(getGui().one(title, options));
-    }
-
-    @Override
     public Pair<SpellAbilityStackInstance, GameObject> chooseTarget(final SpellAbility saSpellskite,
                                                                     final List<Pair<SpellAbilityStackInstance, GameObject>> allTargets) {
         if (allTargets.size() < 2) {
@@ -1856,7 +1853,11 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
             try {
                 cardView = CardView.getCardForUi(ImageUtil.getPaperCardFromImageKey(sa.getView().getHostCard().getCurrentState().getTrackableImageKey()));
             } catch (Exception e) {
-                cardView = sa.getView().getHostCard();
+                SpellAbilityView spellAbilityView = sa.getView();
+                if (spellAbilityView != null) //updated view
+                    cardView = spellAbilityView.getHostCard();
+                else //fallback
+                    cardView = sa.getCardView();
             }
             return this.getGui().confirm(cardView, question.replaceAll("\n", " "));
         } else {
@@ -1994,8 +1995,8 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
     }
 
     @Override
-    public void playTrigger(final Card host, final WrappedAbility wrapperAbility, final boolean isMandatory) {
-        HumanPlay.playSpellAbilityNoStack(this, player, wrapperAbility);
+    public boolean playTrigger(final Card host, final WrappedAbility wrapperAbility, final boolean isMandatory) {
+        return HumanPlay.playSpellAbilityNoStack(this, player, wrapperAbility);
     }
 
     @Override
@@ -2446,8 +2447,8 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         private GameState createGameStateObject() {
             return new GameState() {
                 @Override
-                public IPaperCard getPaperCard(final String cardName) {
-                    return FModel.getMagicDb().getCommonCards().getCard(cardName);
+                public IPaperCard getPaperCard(final String cardName, final String setCode, final int artID) {
+                    return FModel.getMagicDb().getCommonCards().getCard(cardName, setCode, artID);
                 }
             };
         }

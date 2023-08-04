@@ -471,6 +471,11 @@ public class MapStage extends GameStage {
         if (difficultyData.spawnRank == 2 && !spawnHard) return false;
         if (difficultyData.spawnRank == 1 && !spawnNorm) return false;
         if (difficultyData.spawnRank == 0 && !spawnEasy) return false;
+
+        if (prop.containsKey("spawnCondition") && !prop.get("spawnCondition").toString().isEmpty()){
+
+        }
+
         return true;
     }
 
@@ -544,7 +549,19 @@ public class MapStage extends GameStage {
                         int portalTargetId = (!prop.containsKey("teleportObjectId") || prop.get("teleportObjectId") ==null || prop.get("teleportObjectId").toString().isEmpty())? 0: Integer.parseInt(prop.get("teleportObjectId").toString());
 
                         PortalActor portal = new PortalActor(this, id, prop.get("teleport").toString(), px, py, pw, ph, prop.get("direction").toString(), currentMap, portalTargetId, portalSpriteToUse);
-                        portal.setAnimation(prop.get("portalState").toString());
+
+                        if (prop.containsKey("activeQuestFlag") && Current.player().checkQuestFlag(prop.get("activeQuestFlag").toString())){
+                            portal.setAnimation("active");
+                        }
+                        else if (prop.containsKey("inactiveQuestFlag") && Current.player().checkQuestFlag(prop.get("inactiveQuestFlag").toString())){
+                            portal.setAnimation("inactive");
+                        }
+                        else if (prop.containsKey("closedQuestFlag") && Current.player().checkQuestFlag(prop.get("closedQuestFlag").toString())){
+                            portal.setAnimation("closed");
+                        }
+                        else if (prop.containsKey("portalState")) {
+                            portal.setAnimation(prop.get("portalState").toString());
+                        }
                         if (prop.containsKey("spawn") && prop.get("spawn").toString().equals("true")) {
                             spawnClassified.add(portal);
                         } else if (validSpawnPoint) {
@@ -656,7 +673,7 @@ public class MapStage extends GameStage {
                         //TODO: Ability to move them (using a sequence such as "UULU" for up, up, left, up).
                         break;
                     case "inn":
-                        addMapActor(obj, new OnCollide(() -> Forge.switchScene(InnScene.instance())));
+                        addMapActor(obj, new OnCollide(() -> Forge.switchScene(InnScene.instance(TileMapScene.instance(), TileMapScene.instance().rootPoint.getID(), changes, id))));
                         break;
                     case "spellsmith":
                         addMapActor(obj, new OnCollide(() -> Forge.switchScene(SpellSmithScene.instance())));
@@ -666,7 +683,7 @@ public class MapStage extends GameStage {
                         addMapActor(obj, shardTraderActor);
                         if (prop.containsKey("hasSign") && Boolean.parseBoolean(prop.get("hasSign").toString()) && prop.containsKey("signYOffset") && prop.containsKey("signXOffset")) {
                             try {
-                                TextureSprite sprite = new TextureSprite(Config.instance().getAtlas(ShardTraderScene.spriteAtlas).createSprite(ShardTraderScene.sprite));
+                                TextureSprite sprite = new TextureSprite(Config.instance().getAtlasSprite(ShardTraderScene.spriteAtlas, ShardTraderScene.sprite));
                                 sprite.setX(shardTraderActor.getX() + Float.parseFloat(prop.get("signXOffset").toString()));
                                 sprite.setY(shardTraderActor.getY() + Float.parseFloat(prop.get("signYOffset").toString()));
                                 addMapActor(sprite);
@@ -811,13 +828,13 @@ public class MapStage extends GameStage {
                         addMapActor(obj, actor);
                         if (prop.containsKey("hasSign") && (boolean) prop.get("hasSign") && prop.containsKey("signYOffset") && prop.containsKey("signXOffset")) {
                             try {
-                                TextureSprite sprite = new TextureSprite(Config.instance().getAtlas(data.spriteAtlas).createSprite(data.sprite));
+                                TextureSprite sprite = new TextureSprite(Config.instance().getAtlasSprite(data.spriteAtlas, data.sprite));
                                 sprite.setX(actor.getX() + Float.parseFloat(prop.get("signXOffset").toString()));
                                 sprite.setY(actor.getY() + Float.parseFloat(prop.get("signYOffset").toString()));
                                 addMapActor(sprite);
 
-                                if (!(data.overlaySprite == null | data.overlaySprite.isEmpty())) {
-                                    TextureSprite overlay = new TextureSprite(Config.instance().getAtlas(data.spriteAtlas).createSprite(data.overlaySprite));
+                                if (!(data.overlaySprite == null || data.overlaySprite.isEmpty())) {
+                                    TextureSprite overlay = new TextureSprite(Config.instance().getAtlasSprite(data.spriteAtlas, data.overlaySprite));
                                     overlay.setX(actor.getX() + Float.parseFloat(prop.get("signXOffset").toString()));
                                     overlay.setY(actor.getY() + Float.parseFloat(prop.get("signYOffset").toString()));
                                     addMapActor(overlay);
@@ -941,6 +958,15 @@ public class MapStage extends GameStage {
                 if (actors.get(i) instanceof EnemySprite) {
                     ((EnemySprite)(actors.get(i))).inactive = false;
                     (actors.get(i)).resetCollisionHeight();
+                    return true;
+                }
+                else if (actors.get(i) instanceof PortalActor) {
+                    PortalActor thisPortal = (PortalActor)(actors.get(i));
+
+                    if (thisPortal.getAnimation().equals("active"))
+                        thisPortal.setAnimation("closed");
+                    else
+                        thisPortal.setAnimation("active");
                     return true;
                 }
             }
@@ -1067,7 +1093,6 @@ public class MapStage extends GameStage {
                 if (actor instanceof EnemySprite) {
                     EnemySprite mob = (EnemySprite) actor;
                     currentMob = mob;
-                    currentMob.clearCollisionHeight();
                     resetPosition();
                     if (mob.dialog != null && mob.dialog.canShow()) { //This enemy has something to say. Display a dialog like if it was a DialogActor but only if dialogue is possible.
                         mob.dialog.activate();
@@ -1095,6 +1120,7 @@ public class MapStage extends GameStage {
 
     public void beginDuel(EnemySprite mob) {
         if (mob == null) return;
+        mob.clearCollisionHeight();
         currentMob = mob;
         player.setAnimation(CharacterSprite.AnimationTypes.Attack);
         player.playEffect(Paths.EFFECT_SPARKS, 0.5f);
@@ -1104,6 +1130,8 @@ public class MapStage extends GameStage {
         int duration = mob.getData().boss ? 400 : 200;
         if (Controllers.getCurrent() != null && Controllers.getCurrent().canVibrate())
             Controllers.getCurrent().startVibration(duration, 1);
+        Forge.restrictAdvMenus = true;
+        player.clearCollisionHeight();
         startPause(0.8f, () -> {
             Forge.setCursor(null, Forge.magnifyToggle ? "1" : "2");
             SoundSystem.instance.play(SoundEffectType.ManaBurn, false);
@@ -1116,7 +1144,7 @@ public class MapStage extends GameStage {
                         if (isInMap && effect != null && !mob.ignoreDungeonEffect)
                             duelScene.setDungeonEffect(effect);
                         Forge.switchScene(duelScene);
-                    }, Forge.takeScreenshot(), true, false, false, false, "", Current.player().avatar(), mob.getAtlasPath(), Current.player().getName(), mob.nameOverride.isEmpty() ? mob.getData().name : mob.nameOverride));
+                    }, Forge.takeScreenshot(), true, false, false, false, "", Current.player().avatar(), mob.getAtlasPath(), Current.player().getName(), mob.getName()));
                 }
             });
         });
@@ -1138,6 +1166,7 @@ public class MapStage extends GameStage {
         if (dialogStage == null){
             setDialogStage(GameHUD.getInstance());
         }
+        GameHUD.getInstance().playerIdle();
         dialogButtonMap.clear();
         for (int i = 0; i < dialog.getButtonTable().getCells().size; i++) {
             dialogButtonMap.add((TextraButton) dialog.getButtonTable().getCells().get(i).getActor());
