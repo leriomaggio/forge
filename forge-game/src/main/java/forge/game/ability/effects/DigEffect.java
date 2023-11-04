@@ -151,18 +151,13 @@ public class DigEffect extends SpellAbilityEffect {
         }
 
         boolean changeAll = false;
-        boolean allButOne = false;
         boolean totalCMC = sa.hasParam("WithTotalCMC");
         int totcmc = AbilityUtils.calculateAmount(host, sa.getParam("WithTotalCMC"), sa);
 
         if (sa.hasParam("ChangeNum")) {
             if (sa.getParam("ChangeNum").equalsIgnoreCase("All")) {
                 changeAll = true;
-            }
-            else if (sa.getParam("ChangeNum").equalsIgnoreCase("AllButOne")) {
-                allButOne = true;
-            }
-            else {
+            } else {
                 destZone1ChangeNum = AbilityUtils.calculateAmount(host, sa.getParam("ChangeNum"), sa);
             }
         }
@@ -325,20 +320,6 @@ public class DigEffect extends SpellAbilityEffect {
                         if (!movedCards.isEmpty()) {
                             game.getAction().reveal(movedCards, chooser, true, Localizer.getInstance().getMessage("lblPlayerPickedChosen", chooser.getName(), ""));
                         }
-                    } else if (allButOne) {
-                        movedCards = new CardCollection(valid);
-                        String prompt;
-                        if (destZone2.equals(ZoneType.Library) && libraryPosition2 == 0) {
-                            prompt = Localizer.getInstance().getMessage("lblChooseACardToLeaveTargetLibraryTop", p.getName());
-                        } else {
-                            prompt = Localizer.getInstance().getMessage("lblChooseACardLeaveTarget", p.getName(), destZone2.getTranslatedName());
-                        }
-
-                        Card chosen = chooser.getController().chooseSingleEntityForEffect(valid, delayedReveal, sa, prompt, false, p, null);
-                        movedCards.remove(chosen);
-                        if (sa.hasParam("RandomOrder")) {
-                            CardLists.shuffle(movedCards);
-                        }
                     } else {
                         String prompt;
 
@@ -347,7 +328,13 @@ public class DigEffect extends SpellAbilityEffect {
                         } else {
                             prompt = Localizer.getInstance().getMessage("lblChooseCardsPutIntoZone", destZone1.getTranslatedName());
                             if (destZone1.equals(ZoneType.Library)) {
-                                if (libraryPosition == -1) {
+                                if (!destZone2.equals(ZoneType.Library) && destZone1ChangeNum == 1) {
+                                    if (libraryPosition == 0) {
+                                        prompt = Localizer.getInstance().getMessage("lblChooseACardToLeaveTargetLibraryTop", p.getName());
+                                    } else {
+                                        prompt = Localizer.getInstance().getMessage("lblChooseACardLeaveTarget", p.getName(), destZone1.getTranslatedName());
+                                    }
+                                } else if (libraryPosition == -1) {
                                     prompt = Localizer.getInstance().getMessage("lblChooseCardPutOnTargetLibraryBottom", p.getName());
                                 } else if (libraryPosition == 0) {
                                     prompt = Localizer.getInstance().getMessage("lblChooseCardPutOnTargetLibraryTop", p.getName());
@@ -362,16 +349,14 @@ public class DigEffect extends SpellAbilityEffect {
                             if (p == chooser) { // the digger can still see all the dug cards when choosing
                                 chooser.getController().tempShowCards(top);
                             }
-                            List<Card> chosen = new ArrayList<>();
 
                             int max = anyNumber ? valid.size() : Math.min(valid.size(), destZone1ChangeNum);
                             int min = (anyNumber || optional) ? 0 : max;
                             if (max > 0) { // if max is 0 don't make a choice
-                                chosen = chooser.getController().chooseEntitiesForEffect(valid, min, max, delayedReveal, sa, prompt, p, null);
+                                movedCards.addAll(chooser.getController().chooseEntitiesForEffect(valid, min, max, delayedReveal, sa, prompt, p, null));
                             }
 
                             chooser.getController().endTempShowCards();
-                            movedCards.addAll(chosen);
                         }
 
                         if (!changeValid.isEmpty() && !sa.hasParam("ExileFaceDown") && !sa.hasParam("NoReveal")) {
@@ -383,7 +368,7 @@ public class DigEffect extends SpellAbilityEffect {
                     }
                     Collections.reverse(movedCards);
 
-                    if (destZone1.equals(ZoneType.Battlefield)) {
+                    if (destZone1.equals(ZoneType.Battlefield) || destZone1.equals(ZoneType.Library)) {
                         movedCards = (CardCollection) GameActionUtil.orderCardsByTheirOwners(game, movedCards, destZone1, sa);
                     }
 
@@ -400,10 +385,17 @@ public class DigEffect extends SpellAbilityEffect {
                             if (sa.hasParam("Tapped")) {
                                 c.setTapped(true);
                             }
-                            if (destZone1.equals(ZoneType.Battlefield) && sa.hasParam("WithCounter")) {
-                                final int numCtr = AbilityUtils.calculateAmount(host,
-                                        sa.getParamOrDefault("WithCounterNum", "1"), sa);
-                                c.addEtbCounter(CounterType.getType(sa.getParam("WithCounter")), numCtr, player);
+                            if (sa.hasParam("FaceDown")) {
+                                c.turnFaceDown(true);
+                                CardFactoryUtil.setFaceDownState(c, sa);
+                            }
+                            if (destZone1.equals(ZoneType.Battlefield)) {
+                                moveParams.put(AbilityKey.SimultaneousETB, movedCards);
+                                if (sa.hasParam("WithCounter")) {
+                                    final int numCtr = AbilityUtils.calculateAmount(host,
+                                            sa.getParamOrDefault("WithCounterNum", "1"), sa);
+                                    c.addEtbCounter(CounterType.getType(sa.getParam("WithCounter")), numCtr, player);
+                                }
                             }
                             if (sa.hasAdditionalAbility("AnimateSubAbility")) {
                                 // need LKI before Animate does apply
@@ -435,7 +427,7 @@ public class DigEffect extends SpellAbilityEffect {
                             c.turnFaceDown(true);
                         }
                         if (sa.hasParam("WithMayLook")) {
-                            c.addMayLookFaceDownExile(c.getOwner());
+                            c.addMayLookFaceDownExile(player);
                         }
                         if (sa.hasParam("Imprint")) {
                             host.addImprintedCard(c);
@@ -450,54 +442,58 @@ public class DigEffect extends SpellAbilityEffect {
                     }
 
                     // now, move the rest to destZone2
-                    if (destZone2 == ZoneType.Library || destZone2 == ZoneType.PlanarDeck || destZone2 == ZoneType.SchemeDeck
-                            || destZone2 == ZoneType.Graveyard) {
-                        CardCollection afterOrder = rest;
-                        if (sa.hasParam("RestRandomOrder")) {
-                            CardLists.shuffle(afterOrder);
-                        } else if (!skipReorder && rest.size() > 1) {
-                            if (destZone2 == ZoneType.Graveyard) {
-                                afterOrder = (CardCollection) GameActionUtil.orderCardsByTheirOwners(game, rest, destZone2, sa);
-                            } else {
-                                afterOrder = (CardCollection) chooser.getController().orderMoveToZoneList(rest, destZone2, sa);
-                            }
-                        }
-                        if (libraryPosition2 != -1) {
-                            // Closest to top
-                            Collections.reverse(afterOrder);
-                        }
-
-                        for (final Card c : afterOrder) {
-                            final ZoneType origin = c.getZone().getZoneType();
-                            Card m = game.getAction().moveTo(destZone2, c, libraryPosition2, sa);
-                            if (m != null && !origin.equals(m.getZone().getZoneType())) {
-                                table.put(origin, m.getZone().getZoneType(), m);
-                            }
-                            if (remZone2) {
-                                host.addRemembered(m);
-                            }
-                        }
-                    } else {
-                        // just move them randomly
-                        for (int i = 0; i < rest.size(); i++) {
-                            Card c = rest.get(i);
-                            final ZoneType origin = c.getZone().getZoneType();
-                            final PlayerZone toZone = c.getOwner().getZone(destZone2);
-                            c = game.getAction().moveTo(toZone, c, sa);
-                            if (!origin.equals(c.getZone().getZoneType())) {
-                                table.put(origin, c.getZone().getZoneType(), c);
-                            }
-                            if (destZone2 == ZoneType.Exile) {
-                                if (sa.hasParam("ExileWithCounter")) {
-                                    c.addCounter(CounterType.getType(sa.getParam("ExileWithCounter")), 1, player, counterTable);
+                    if (!sa.hasParam("DestZone2Optional") || p.getController().confirmAction(sa, null,
+                            Localizer.getInstance().getMessage("lblDoYouWantPutCardToZone",
+                                    destZone2.getTranslatedName()), null)) {
+                        if (destZone2 == ZoneType.Library || destZone2 == ZoneType.PlanarDeck
+                                || destZone2 == ZoneType.SchemeDeck || destZone2 == ZoneType.Graveyard) {
+                            CardCollection afterOrder = rest;
+                            if (sa.hasParam("RestRandomOrder")) {
+                                CardLists.shuffle(afterOrder);
+                            } else if (!skipReorder && rest.size() > 1) {
+                                if (destZone2 == ZoneType.Graveyard) {
+                                    afterOrder = (CardCollection) GameActionUtil.orderCardsByTheirOwners(game, rest, destZone2, sa);
+                                } else {
+                                    afterOrder = (CardCollection) chooser.getController().orderMoveToZoneList(rest, destZone2, sa);
                                 }
-                                handleExiledWith(c, sa);
+                            }
+                            if (libraryPosition2 != -1) {
+                                // Closest to top
+                                Collections.reverse(afterOrder);
+                            }
+
+                            for (final Card c : afterOrder) {
+                                final ZoneType origin = c.getZone().getZoneType();
+                                Card m = game.getAction().moveTo(destZone2, c, libraryPosition2, sa);
+                                if (m != null && !origin.equals(m.getZone().getZoneType())) {
+                                    table.put(origin, m.getZone().getZoneType(), m);
+                                }
                                 if (remZone2) {
-                                    host.addRemembered(c);
+                                    host.addRemembered(m);
+                                }
+                            }
+                        } else {
+                            // just move them randomly
+                            for (Card c : rest) {
+                                final ZoneType origin = c.getZone().getZoneType();
+                                final PlayerZone toZone = c.getOwner().getZone(destZone2);
+                                c = game.getAction().moveTo(toZone, c, sa);
+                                if (!origin.equals(c.getZone().getZoneType())) {
+                                    table.put(origin, c.getZone().getZoneType(), c);
+                                }
+                                if (destZone2 == ZoneType.Exile) {
+                                    if (sa.hasParam("ExileWithCounter")) {
+                                        c.addCounter(CounterType.getType(sa.getParam("ExileWithCounter")), 1, player, counterTable);
+                                    }
+                                    handleExiledWith(c, sa);
+                                    if (remZone2) {
+                                        host.addRemembered(c);
+                                    }
                                 }
                             }
                         }
                     }
+
                 }
             }
         }

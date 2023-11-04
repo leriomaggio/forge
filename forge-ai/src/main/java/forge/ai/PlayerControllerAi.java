@@ -36,6 +36,7 @@ import forge.game.phase.PhaseType;
 import forge.game.player.*;
 import forge.game.replacement.ReplacementEffect;
 import forge.game.spellability.*;
+import forge.game.staticability.StaticAbility;
 import forge.game.trigger.WrappedAbility;
 import forge.game.zone.ZoneType;
 import forge.item.PaperCard;
@@ -252,8 +253,8 @@ public class PlayerControllerAi extends PlayerController {
     }
 
     @Override
-    public boolean confirmStaticApplication(Card hostCard, GameEntity affected, String logic, String message) {
-        return getAi().confirmStaticApplication(hostCard, affected, logic, message);
+    public boolean confirmStaticApplication(Card hostCard, PlayerActionConfirmMode mode, String message, String logic) {
+        return getAi().confirmStaticApplication(hostCard, logic);
     }
 
     @Override
@@ -589,17 +590,14 @@ public class PlayerControllerAi extends PlayerController {
     }
 
     @Override
-    public boolean mulliganKeepHand(Player firstPlayer, int cardsToReturn)  {
-        return !ComputerUtil.wantMulligan(player, cardsToReturn);
+    public Integer chooseRollToIgnore(List<Integer> rolls) {
+        //TODO create AI logic for this
+        return Aggregates.random(rolls);
     }
 
     @Override
-    public CardCollectionView getCardsToMulligan(Player firstPlayer)  {
-        if (!ComputerUtil.wantMulligan(player, 0)) {
-            return null;
-        }
-
-        return player.getCardsIn(ZoneType.Hand);
+    public boolean mulliganKeepHand(Player firstPlayer, int cardsToReturn)  {
+        return !ComputerUtil.wantMulligan(player, cardsToReturn);
     }
 
     @Override
@@ -990,6 +988,12 @@ public class PlayerControllerAi extends PlayerController {
     }
 
     @Override
+    public StaticAbility chooseSingleStaticAbility(String prompt, List<StaticAbility> possibleStatics) {
+        // only matters in corner cases
+        return Iterables.getFirst(possibleStatics, null);
+    }
+
+    @Override
     public String chooseProtectionType(String string, SpellAbility sa, List<String> choices) {
         String choice = choices.get(0);
         SpellAbility hostsa = null;     //for Protect sub-ability
@@ -1062,6 +1066,7 @@ public class PlayerControllerAi extends PlayerController {
         emptyAbility.setSVars(sa.getSVars());
         emptyAbility.setCardState(sa.getCardState());
         emptyAbility.setXManaCostPaid(sa.getRootAbility().getXManaCostPaid());
+
         if (ComputerUtilCost.willPayUnlessCost(sa, player, cost, alreadyPaid, allPayers)) {
             boolean result = ComputerUtil.playNoStack(player, emptyAbility, getGame(), true); // AI needs something to resolve to pay that cost
             if (!emptyAbility.getPaidHash().isEmpty()) {
@@ -1299,6 +1304,8 @@ public class PlayerControllerAi extends PlayerController {
                 name = ComputerUtilCard.getMostProminentCardName(cards);
             } else if (logic.equals("CursedScroll")) {
                 name = SpecialCardAi.CursedScroll.chooseCard(player, sa);
+            } else if (logic.equals("PithingNeedle")) {
+                name = SpecialCardAi.PithingNeedle.chooseCard(player, sa);
             }
 
             if (!StringUtils.isBlank(name)) {
@@ -1442,7 +1449,6 @@ public class PlayerControllerAi extends PlayerController {
     @Override
     public int chooseNumberForKeywordCost(SpellAbility sa, Cost cost, KeywordInterface keyword, String prompt, int max) {
         // TODO: improve the logic depending on the keyword and the playability of the cost-modified SA (enough targets present etc.)
-
         if (keyword.getKeyword() == Keyword.CASUALTY
                 && "true".equalsIgnoreCase(sa.getHostCard().getSVar("AINoCasualtyPayment"))) {
             // TODO: Grisly Sigil - currently will be misplayed if Casualty is paid (the cost is always paid, targeting is wrong).
@@ -1464,6 +1470,11 @@ public class PlayerControllerAi extends PlayerController {
         }
 
         return chosenAmount;
+    }
+
+    @Override
+    public int chooseNumberForCostReduction(final SpellAbility sa, final int min, final int max) {
+        return max;
     }
 
     @Override

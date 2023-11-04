@@ -229,7 +229,9 @@ public final class CardUtil {
         if (in.isTransformed()) {
             newCopy.incrementTransformedTimestamp();
         }
-        newCopy.setState(newCopy.getFaceupCardStateName(), false, true);
+        if (newCopy.hasAlternateState()) {
+            newCopy.setState(in.getCurrentStateName(), false, true);
+        }
         if (in.isFaceDown()) {
             newCopy.turnFaceDownNoUpdate();
             newCopy.setType(new CardType(in.getFaceDownState().getType()));
@@ -296,8 +298,7 @@ public final class CardUtil {
 
         newCopy.setChosenType(in.getChosenType());
         newCopy.setChosenType2(in.getChosenType2());
-        newCopy.setChosenName(in.getChosenName());
-        newCopy.setChosenName2(in.getChosenName2());
+        newCopy.setNamedCards(Lists.newArrayList(in.getNamedCards()));
         newCopy.setChosenColors(Lists.newArrayList(in.getChosenColors()));
         if (in.hasChosenNumber()) {
             newCopy.setChosenNumber(in.getChosenNumber());
@@ -327,7 +328,7 @@ public final class CardUtil {
 
         newCopy.setForetold(in.isForetold());
         newCopy.setForetoldThisTurn(in.isForetoldThisTurn());
-        newCopy.setForetoldByEffect(in.isForetoldByEffect());
+        newCopy.setForetoldCostByEffect(in.isForetoldCostByEffect());
 
         newCopy.setMeldedWith(getLKICopy(in.getMeldedWith(), cachedMap));
 

@@ -388,6 +388,13 @@ public class CardView extends GameEntityView {
         set(TrackableProperty.ChosenNumber, c.getChosenNumber().toString());
     }
 
+    public List<String> getStoredRolls() {
+        return get(TrackableProperty.StoredRolls);
+    }
+    void updateStoredRolls(Card c) {
+        set(TrackableProperty.StoredRolls, c.getStoredRollsForView());
+    }
+
     public List<String> getChosenColors() {
         return get(TrackableProperty.ChosenColors);
     }
@@ -509,17 +516,11 @@ public class CardView extends GameEntityView {
         set(TrackableProperty.Sector, c.getSector());
     }
 
-    public String getNamedCard() {
+    public List<String> getNamedCard() {
         return get(TrackableProperty.NamedCard);
     }
     void updateNamedCard(Card c) {
-        set(TrackableProperty.NamedCard, c.getNamedCard());
-    }
-    public String getNamedCard2() {
-        return get(TrackableProperty.NamedCard2);
-    }
-    void updateNamedCard2(Card c) {
-        set(TrackableProperty.NamedCard2, c.getNamedCard2());
+        set(TrackableProperty.NamedCard, c.getNamedCards());
     }
     public boolean getMayPlayPlayers(PlayerView pv) {
         TrackableCollection<PlayerView> col = get(TrackableProperty.MayPlayPlayers);
@@ -1184,7 +1185,7 @@ public class CardView extends GameEntityView {
         }
         void updateName(CardState c) {
             Card card = c.getCard();
-            setName(card.getName(c));
+            setName(card.getName(c, false));
 
             if (CardView.this.getCurrentState() == this) {
                 if (card != null) {
@@ -1233,7 +1234,9 @@ public class CardView extends GameEntityView {
                 if (getCard().getZone() == ZoneType.Exile) {
                     return ImageKeys.getTokenKey(getCard().isForeTold() ? ImageKeys.FORETELL_IMAGE : ImageKeys.HIDDEN_CARD);
                 }
-                return ImageKeys.getTokenKey(getCard().isManifested() ? ImageKeys.MANIFEST_IMAGE : ImageKeys.MORPH_IMAGE);
+                return ImageKeys.getTokenKey(getCard().isManifested() ? ImageKeys.MANIFEST_IMAGE
+                        : getType().getCreatureTypes().isEmpty() ? isCreature() ? ImageKeys.MORPH_IMAGE : ImageKeys.HIDDEN_CARD
+                        : getType().getCreatureTypes().toString().toLowerCase().replace(" ", "_").replace("[", "").replace("]",""));
             }
             if (canBeShownToAny(viewers)) {
                 return get(TrackableProperty.ImageKey);

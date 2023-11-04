@@ -100,6 +100,7 @@ import forge.game.spellability.SpellAbility;
 import forge.game.spellability.SpellAbilityStackInstance;
 import forge.game.spellability.SpellAbilityView;
 import forge.game.spellability.TargetChoices;
+import forge.game.staticability.StaticAbility;
 import forge.game.trigger.Trigger;
 import forge.game.trigger.WrappedAbility;
 import forge.game.zone.MagicStack;
@@ -160,6 +161,8 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
     private boolean mayLookAtAllCards = false;
     private boolean disableAutoYields = false;
 
+    private boolean fullControl = false;
+
     private IGuiGame gui;
 
     protected final InputQueue inputQueue;
@@ -205,7 +208,6 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
     public boolean getDisableAutoYields() {
         return disableAutoYields;
     }
-
     public void setDisableAutoYields(final boolean disableAutoYields0) {
         disableAutoYields = disableAutoYields0;
     }
@@ -213,6 +215,15 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
     @Override
     public boolean mayLookAtAllCards() {
         return mayLookAtAllCards;
+    }
+    /**
+     * Set this to {@code true} to enable this player to see all cards any other
+     * player can see.
+     *
+     * @param mayLookAtAllCards the mayLookAtAllCards to set
+     */
+    public void setMayLookAtAllCards(final boolean mayLookAtAllCards) {
+        this.mayLookAtAllCards = mayLookAtAllCards;
     }
 
     private final ArrayList<Card> tempShownCards = new ArrayList<>();
@@ -255,14 +266,13 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         tempShownCards.clear();
     }
 
-    /**
-     * Set this to {@code true} to enable this player to see all cards any other
-     * player can see.
-     *
-     * @param mayLookAtAllCards the mayLookAtAllCards to set
-     */
-    public void setMayLookAtAllCards(final boolean mayLookAtAllCards) {
-        this.mayLookAtAllCards = mayLookAtAllCards;
+    @Override
+    public boolean isFullControl() {
+        return fullControl;
+    }
+    @Override
+    public void setFullControl(boolean full) {
+        fullControl = full;
     }
 
     /**
@@ -280,6 +290,13 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
             boolean noPermission = true;
             for (CardPlayOption o : hostCard.mayPlay(player)) {
                 if (o.grantsZonePermissions()) {
+                    noPermission = false;
+                    break;
+                }
+            }
+            for (SpellAbility sa : hostCard.getAllSpellAbilities()) {
+                if (sa.hasParam("Activator")
+                        && player.isValid(sa.getParam("Activator"), hostCard.getController(), hostCard, sa)) {
                     noPermission = false;
                     break;
                 }
@@ -790,8 +807,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
     }
 
     @Override
-    public boolean confirmStaticApplication(final Card hostCard, final GameEntity affected, final String logic,
-                                            final String message) {
+    public boolean confirmStaticApplication(final Card hostCard, PlayerActionConfirmMode mode, final String message, final String logic) {
         return InputConfirm.confirm(this, CardView.get(hostCard), message);
     }
 
@@ -1309,7 +1325,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         for (Card c : player.getAllCards()) {
             // Changeling are all creature types, they are not interesting for
             // counting creature types
-            if (c.hasStartOfKeyword(Keyword.CHANGELING.toString())) {
+            if (c.hasKeyword(Keyword.CHANGELING)) {
                 continue;
             }
             // same is true if it somehow has all creature types
@@ -1366,7 +1382,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
                 }
             }
             // special rule for Fabricate and Servo
-            if (c.hasStartOfKeyword(Keyword.FABRICATE.toString())) {
+            if (c.hasKeyword(Keyword.FABRICATE)) {
                 Integer count = typesInDeck.getOrDefault("Servo", 0);
                 typesInDeck.put("Servo", count + 1);
             }
@@ -1407,6 +1423,11 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
     }
 
     @Override
+    public Integer chooseRollToIgnore(List<Integer> rolls) {
+        return getGui().one(Localizer.getInstance().getMessage("lblChooseRollIgnore"), rolls);
+    }
+
+    @Override
     public Object vote(final SpellAbility sa, final String prompt, final List<Object> options,
                        final ListMultimap<Object, Player> votes, Player forPlayer) {
         return getGui().one(prompt, options);
@@ -1425,11 +1446,11 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
                                             GameEntity affected, final String question) {
         if (GuiBase.getInterface().isLibgdxPort()) {
             CardView cardView;
-            SpellAbilityView spellAbilityView = effectSA.getView();
+            SpellAbilityView spellAbilityView = effectSA == null ? null : effectSA.getView();
             if (spellAbilityView != null) //updated view
                 cardView = spellAbilityView.getHostCard();
             else //fallback
-                cardView = effectSA.getCardView();
+                cardView = effectSA == null ? null : effectSA.getCardView();
             return this.getGui().confirm(cardView, question.replaceAll("\n", " "));
         } else {
             final InputConfirm inp = new InputConfirm(this, question, effectSA);
@@ -1451,14 +1472,6 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
         final InputLondonMulligan inp = new InputLondonMulligan(this, player, cardsToReturn);
         inp.showAndWait();
         return inp.getSelectedCards();
-    }
-
-    @Override
-    public CardCollectionView getCardsToMulligan(final Player firstPlayer) {
-        // Partial Paris is gone, so it being commander doesn't really matter anymore...
-        final InputConfirmMulligan inp = new InputConfirmMulligan(this, player, firstPlayer);
-        inp.showAndWait();
-        return inp.isKeepHand() ? null : player.getCardsIn(ZoneType.Hand);
     }
 
     @Override
@@ -1712,7 +1725,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
                     cardView = CardView.getCardForUi(iPaperCard);
                 else
                     cardView = sa.getHostCard().getView();
-                getGui().confirm(cardView, message, ImmutableList.of(localizer.getMessage("lblOk")));
+                getGui().confirm(cardView, message, ImmutableList.of(localizer.getMessage("lblOK")));
             } else {
                 getGui().message(message, sa == null || sa.getHostCard() == null ? "" : CardView.get(sa.getHostCard()).toString());
             }
@@ -1878,6 +1891,23 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
             // prompt user if there are multiple different options
             if (!possibleReplacers.get(i).toString().equals(firstStr)) {
                 return getGui().one(prompt, possibleReplacers);
+            }
+        }
+        // return first option without prompting if all options are the same
+        return first;
+    }
+
+    @Override
+    public StaticAbility chooseSingleStaticAbility(final String prompt, final List<StaticAbility> possibleStatics) {
+        final StaticAbility first = possibleStatics.get(0);
+        if (possibleStatics.size() == 1 || !fullControl) {
+            return first;
+        }
+        final String firstStr = first.toString();
+        for (int i = 1; i < possibleStatics.size(); i++) {
+            // prompt user if there are multiple different options
+            if (!possibleStatics.get(i).toString().equals(firstStr)) {
+                return getGui().one(prompt, possibleStatics);
             }
         }
         // return first option without prompting if all options are the same
@@ -2614,7 +2644,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
                 inp.showAndWait();
                 if (!inp.hasCancelled()) {
                     for (final Card c : inp.getSelected()) {
-                        c.tap(true);
+                        c.tap(true, null, null);
                     }
                 }
             });
@@ -3344,8 +3374,7 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
      * spellability.SpellAbility, java.util.List)
      */
     @Override
-    public List<OptionalCostValue> chooseOptionalCosts(SpellAbility choosen,
-                                                       List<OptionalCostValue> optionalCost) {
+    public List<OptionalCostValue> chooseOptionalCosts(SpellAbility choosen, List<OptionalCostValue> optionalCost) {
         return getGui().many(localizer.getMessage("lblChooseOptionalCosts"), localizer.getMessage("lblOptionalCosts"), 0, optionalCost.size(),
                 optionalCost, choosen.getHostCard().getView());
     }
@@ -3366,6 +3395,14 @@ public class PlayerControllerHuman extends PlayerController implements IGameCont
 
         Integer v = getGui().getInteger(prompt, 0, max, 9);
         return v == null ? 0 : v.intValue();
+    }
+
+    @Override
+    public int chooseNumberForCostReduction(final SpellAbility sa, final int min, final int max) {
+        if (fullControl) {
+            return chooseNumber(sa, localizer.getMessage("lblChooseAmountCostReduction"), min, max);
+        }
+        return max;
     }
 
     @Override

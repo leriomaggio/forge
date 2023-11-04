@@ -621,6 +621,12 @@ public class ComputerUtil {
         // don't sacrifice the card we're pumping
         typeList = ComputerUtilCost.paymentChoicesWithoutTargets(typeList, ability, ai);
 
+        // if the source has "Casualty", don't sacrifice cards that may have granted the effect
+        // TODO: is there a surefire way to determine which card added Casualty?
+        if (source.hasKeyword(Keyword.CASUALTY)) {
+            typeList = CardLists.filter(typeList, Predicates.not(CardPredicates.hasSVar("AIDontSacToCasualty")));
+        }
+
         if (typeList.size() < amount) {
             return null;
         }
@@ -923,7 +929,7 @@ public class ComputerUtil {
         }
 
         for (int i = 0; i < max; i++) {
-            Card c = chooseCardToSacrifice(remaining, ai, destroy);
+            Card c = chooseCardToSacrifice(source, remaining, ai, destroy);
             remaining.remove(c);
             if (c != null) {
                 sacrificed.add(c);
@@ -938,7 +944,7 @@ public class ComputerUtil {
     }
 
     // Precondition it wants: remaining are reverse-sorted by CMC
-    private static Card chooseCardToSacrifice(final CardCollection remaining, final Player ai, final boolean destroy) {
+    private static Card chooseCardToSacrifice(final SpellAbility source, CardCollection remaining, final Player ai, final boolean destroy) {
         // If somehow ("Drop of Honey") they suggest to destroy opponent's card - use the chance!
         for (Card c : remaining) { // first compare is fast, second is precise
             if (ai.isOpponentOf(c.getController()))
@@ -951,6 +957,7 @@ public class ComputerUtil {
                 return indestructibles.get(0);
             }
         }
+
         for (int ip = 0; ip < 6; ip++) { // priority 0 is the lowest, priority 5 the highest
             final int priority = 6 - ip;
             for (Card card : remaining) {
@@ -958,6 +965,11 @@ public class ComputerUtil {
                     return card;
                 }
             }
+        }
+
+        if (source.isEmerge() || source.isOffering()) {
+            // don't sac when cost wouldn't be reduced
+            remaining = CardLists.filter(remaining, CardPredicates.greaterCMC(1));
         }
 
         Card c = null;
@@ -1497,7 +1509,7 @@ public class ComputerUtil {
             }
         }
 
-        all.addAll(ai.getCardsActivableInExternalZones(true));
+        all.addAll(ai.getCardsActivatableInExternalZones(true));
         all.addAll(ai.getCardsIn(ZoneType.Hand));
 
         for (final Card c : all) {
@@ -1538,7 +1550,7 @@ public class ComputerUtil {
     public static boolean hasAFogEffect(final Player defender, final Player ai, boolean checkingOther) {
         final CardCollection all = new CardCollection(defender.getCardsIn(ZoneType.Battlefield));
 
-        all.addAll(defender.getCardsActivableInExternalZones(true));
+        all.addAll(defender.getCardsActivatableInExternalZones(true));
         // TODO check if cards can be viewed instead
         if (!checkingOther) {
             all.addAll(defender.getCardsIn(ZoneType.Hand));
@@ -1590,7 +1602,7 @@ public class ComputerUtil {
     public static int possibleNonCombatDamage(final Player ai, final Player enemy) {
         int damage = 0;
         final CardCollection all = new CardCollection(ai.getCardsIn(ZoneType.Battlefield));
-        all.addAll(ai.getCardsActivableInExternalZones(true));
+        all.addAll(ai.getCardsActivatableInExternalZones(true));
         all.addAll(CardLists.filter(ai.getCardsIn(ZoneType.Hand), Predicates.not(Presets.PERMANENTS)));
 
         for (final Card c : all) {
@@ -2140,6 +2152,10 @@ public class ComputerUtil {
         final int handSize = handList.size();
         final int landSize = lands.size();
         int score = handList.size();
+        //adjust score for Living End decks
+        final CardCollectionView livingEnd = CardLists.filter(handList, c -> "Living End".equalsIgnoreCase(c.getName()));
+        if (livingEnd.size() > 0)
+            score = -(livingEnd.size() * 10);
 
         if (handSize/2 == landSize || handSize/2 == landSize +1) {
             score += 10;
@@ -2456,6 +2472,13 @@ public class ComputerUtil {
                 }
                 else if (logic.equals("MostProminentComputerControls")) {
                     chosen = ComputerUtilCard.getMostProminentType(ai.getCardsIn(ZoneType.Battlefield), valid);
+                }
+                else if (logic.equals("MostProminentComputerControlsOrOwns")) {
+                    CardCollectionView list = ai.getCardsIn(Arrays.asList(ZoneType.Battlefield, ZoneType.Hand));
+                    if (list.isEmpty()) {
+                        list = ai.getCardsIn(Arrays.asList(ZoneType.Library));
+                    }
+                    chosen = ComputerUtilCard.getMostProminentType(list, valid);
                 }
                 else if (logic.equals("MostProminentOppControls")) {
                     CardCollection list = ai.getOpponents().getCardsIn(ZoneType.Battlefield);
@@ -2916,7 +2939,8 @@ public class ComputerUtil {
                 || type.is(CounterEnumType.GOLD) || type.is(CounterEnumType.MUSIC) || type.is(CounterEnumType.PUPA)
                 || type.is(CounterEnumType.PARALYZATION) || type.is(CounterEnumType.SHELL) || type.is(CounterEnumType.SLEEP)
                 || type.is(CounterEnumType.SLUMBER) || type.is(CounterEnumType.SLEIGHT) || type.is(CounterEnumType.WAGE)
-                || type.is(CounterEnumType.INCARNATION) || type.is(CounterEnumType.RUST) || type.is(CounterEnumType.STUN);
+                || type.is(CounterEnumType.INCARNATION) || type.is(CounterEnumType.RUST) || type.is(CounterEnumType.STUN)
+                || type.is(CounterEnumType.FINALITY);
     }
 
     // this countertypes has no effect

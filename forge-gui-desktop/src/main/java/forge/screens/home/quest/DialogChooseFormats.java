@@ -91,7 +91,7 @@ public class DialogChooseFormats extends FChooseDialog {
 			}
 		};
 
-		FButton btnOk = new FButton(localizer.getMessage("lblOk"));
+		FButton btnOk = new FButton(localizer.getMessage("lblOK"));
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {

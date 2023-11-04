@@ -31,6 +31,7 @@ import forge.game.ability.AbilityFactory;
 import forge.game.ability.AbilityUtils;
 import forge.game.ability.ApiType;
 import forge.game.cost.Cost;
+import forge.game.keyword.Keyword;
 import forge.game.keyword.KeywordInterface;
 import forge.game.player.Player;
 import forge.game.replacement.ReplacementHandler;
@@ -329,7 +330,7 @@ public class CardFactory {
         String trigger = "Mode$ PlanarDice | Result$ Planeswalk | TriggerZones$ Command | Secondary$ True | " +
                 "TriggerDescription$ Whenever you roll the Planeswalker symbol on the planar die, planeswalk.";
 
-        String rolledWalk = "DB$ Planeswalk";
+        String rolledWalk = "DB$ Planeswalk | Cause$ PlanarDie";
 
         Trigger planesWalkTrigger = TriggerHandler.parseTrigger(trigger, card, true);
         planesWalkTrigger.setOverridingAbility(AbilityFactory.getAbility(rolledWalk, card));
@@ -652,8 +653,6 @@ public class CardFactory {
         if (p != null) {
             to.setActivatingPlayer(p, lki);
         }
-
-        //to.changeText();
     }
 
     /**
@@ -674,6 +673,7 @@ public class CardFactory {
         final Map<String,String> origSVars = host.getSVars();
         final List<String> types = Lists.newArrayList();
         final List<String> keywords = Lists.newArrayList();
+        boolean KWifNew = false;
         final List<String> removeKeywords = Lists.newArrayList();
         List<String> creatureTypes = null;
         final CardCloneStates result = new CardCloneStates(in, sa);
@@ -690,7 +690,12 @@ public class CardFactory {
         }
 
         if (sa.hasParam("AddKeywords")) {
-            keywords.addAll(Arrays.asList(sa.getParam("AddKeywords").split(" & ")));
+            String kwString = sa.getParam("AddKeywords");
+            if (kwString.startsWith("IfNew ")) {
+                KWifNew = true;
+                kwString = kwString.substring(6);
+            }
+            keywords.addAll(Arrays.asList(kwString.split(" & ")));
         }
 
         if (sa.hasParam("RemoveKeywords")) {
@@ -805,7 +810,23 @@ public class CardFactory {
                 state.setCreatureTypes(creatureTypes);
             }
 
-            state.addIntrinsicKeywords(keywords);
+            List<String> finalizedKWs = KWifNew ? Lists.newArrayList() : keywords;
+            if (KWifNew) {
+                for (String k : keywords) {
+                    Keyword toAdd = Keyword.getInstance(k).getKeyword();
+                    boolean match = false;
+                    for (KeywordInterface kw : state.getIntrinsicKeywords()) {
+                        if (kw.getKeyword().equals(toAdd)) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        finalizedKWs.add(k);
+                    }
+                }
+            }
+            state.addIntrinsicKeywords(finalizedKWs);
             for (String kw : removeKeywords) {
                 state.removeIntrinsicKeyword(kw);
             }

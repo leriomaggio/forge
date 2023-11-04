@@ -89,6 +89,7 @@ public class AiController {
     private boolean useSimulation;
     private SpellAbilityPicker simPicker;
     private int lastAttackAggression;
+    private boolean useLivingEnd;
 
     public AiController(final Player computerPlayer, final Game game0) {
         player = computerPlayer;
@@ -276,6 +277,11 @@ public class AiController {
             // These triggers all care for ETB effects
 
             if (tr.getMode() != TriggerType.ChangesZone) {
+                continue;
+            }
+
+            // can't fetch partner isn't problematic
+            if (tr.getKeyword() != null && tr.getKeyword().getOriginal().startsWith("Partner")) {
                 continue;
             }
 
@@ -785,7 +791,7 @@ public class AiController {
         }
 
         int oldCMC = -1;
-        boolean xCost = sa.costHasX() || host.hasStartOfKeyword("Strive");
+        boolean xCost = sa.costHasX() || host.hasKeyword(Keyword.STRIVE);
         if (!xCost) {
             if (!ComputerUtilCost.canPayCost(sa, player, sa.isTrigger())) {
                 // for most costs, it's OK to check if they can be paid early in order to avoid running a heavy API check
@@ -1197,16 +1203,17 @@ public class AiController {
     }
 
     public boolean confirmAction(SpellAbility sa, PlayerActionConfirmMode mode, String message, Map<String, Object> params) {
-        if (mode == PlayerActionConfirmMode.AlternativeDamageAssignment) {
+        if (mode == PlayerActionConfirmMode.ChangeZoneToAltDestination) {
+            System.err.printf("Overriding AI confirmAction decision for %s, defaulting to true.\n", mode);
             return true;
         }
 
-        ApiType api = sa.getApi();
+        ApiType api = sa == null ? null : sa.getApi();
 
         // Abilities without api may also use this routine, However they should provide a unique mode value ?? How could this work?
-        if (api == null) {
-            String exMsg = String.format("AI confirmAction does not know what to decide about %s mode (api is null).",
-                    mode);
+        if (sa == null || api == null) {
+            String exMsg = String.format("AI confirmAction does not know what to decide about %s mode (%s is null).",
+                    mode, sa == null ? "SA" : "API");
             throw new IllegalArgumentException(exMsg);
         }
         return SpellApiToAi.Converter.get(api).confirmAction(player, sa, mode, message, params);
@@ -1225,7 +1232,7 @@ public class AiController {
         return false;
     }
 
-    public boolean confirmStaticApplication(Card hostCard, GameEntity affected, String logic, String message) {
+    public boolean confirmStaticApplication(Card hostCard, String logic) {
         return true;
     }
 
@@ -1384,7 +1391,7 @@ public class AiController {
 
                     // add mayPlay option
                     for (CardPlayOption o : land.mayPlay(player)) {
-                        la = new LandAbility(land, player, o.getAbility());
+                        la = new LandAbility(land, player, o);
                         la.setCardState(land.getCurrentState());
                         if (la.canPlay()) {
                             abilities.add(la);
@@ -1566,6 +1573,8 @@ public class AiController {
                 return spellAbility instanceof LandAbility || (spellAbility.getHostCard() != null && ComputerUtilCard.isCardRemAIDeck(spellAbility.getHostCard()));
             }
         });
+        //update LivingEndPlayer
+        useLivingEnd = Iterables.any(player.getZone(ZoneType.Library), CardPredicates.nameEquals("Living End"));
 
         SpellAbility chosenSa = chooseSpellAbilityToPlayFromList(saList, true);
 
@@ -1588,7 +1597,8 @@ public class AiController {
             String assertex = ComparatorUtil.verifyTransitivity(ComputerUtilAbility.saEvaluator, all);
             Sentry.captureMessage(ex.getMessage() + "\nAssertionError [verifyTransitivity]: " + assertex);
         }
-
+        //avoid ComputerUtil.aiLifeInDanger in loops as it slows down a lot.. call this outside loops will generally be fast...
+        boolean isLifeInDanger = useLivingEnd && ComputerUtil.aiLifeInDanger(player, true, 0);
         for (final SpellAbility sa : ComputerUtilAbility.getOriginalAndAltCostAbilities(all, player)) {
             // Don't add Counterspells to the "normal" playcard lookups
             if (skipCounter && sa.getApi() == ApiType.Counter) {
@@ -1603,6 +1613,25 @@ public class AiController {
                     continue;
                 }
             }
+            //living end AI decks
+            AiPlayDecision aiPlayDecision = AiPlayDecision.CantPlaySa;
+            if (useLivingEnd) {
+                if (sa.isCycling() && sa.canCastTiming(player)) {
+                    if (ComputerUtilCost.canPayCost(sa, player, sa.isTrigger()))
+                        aiPlayDecision = AiPlayDecision.WillPlay;
+                } else if (sa.getHostCard().hasKeyword(Keyword.CASCADE)) {
+                    if (isLifeInDanger) { //needs more tune up for certain conditions
+                        aiPlayDecision = player.getCreaturesInPlay().size() >= 4 ? AiPlayDecision.CantPlaySa : AiPlayDecision.WillPlay;
+                    } else if (CardLists.filter(player.getZone(ZoneType.Graveyard).getCards(), CardPredicates.Presets.CREATURES).size() > 4) {
+                        if (player.getCreaturesInPlay().size() >= 4) // it's good minimum
+                            continue;
+                        else if (!sa.getHostCard().isPermanent() && sa.canCastTiming(player) && ComputerUtilCost.canPayCost(sa, player, sa.isTrigger()))
+                            aiPlayDecision = AiPlayDecision.WillPlay;// needs tuneup for bad matchups like reanimator and other things to check on opponent graveyard
+                    } else {
+                        continue;
+                    }
+                }
+            }
 
             sa.setActivatingPlayer(player, true);
             SpellAbility root = sa.getRootAbility();
@@ -1611,8 +1640,8 @@ public class AiController {
                 sa.setLastStateBattlefield(game.getLastStateBattlefield());
                 sa.setLastStateGraveyard(game.getLastStateGraveyard());
             }
-
-            AiPlayDecision opinion = canPlayAndPayFor(sa);
+            //override decision for living end player
+            AiPlayDecision opinion = useLivingEnd && AiPlayDecision.WillPlay.equals(aiPlayDecision) ? aiPlayDecision : canPlayAndPayFor(sa);
 
             // reset LastStateBattlefield
             sa.clearLastState();

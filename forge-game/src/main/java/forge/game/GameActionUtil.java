@@ -144,7 +144,7 @@ public final class GameActionUtil {
                     sar.setInstantSpeed(true);
                 }
                 sar.setZone(null);
-                newSA.setMayPlay(o.getAbility());
+                newSA.setMayPlay(o);
 
                 if (changedManaCost) {
                     if ("0".equals(sa.getParam("ActivationLimit")) && sa.getHostCard().getManaCost().isNoCost()) {
@@ -254,7 +254,7 @@ public final class GameActionUtil {
                 }
 
                 // foretell by external source
-                if (source.isForetoldByEffect() && source.isInZone(ZoneType.Exile) && activator.equals(source.getOwner())
+                if (source.isForetoldCostByEffect() && source.isInZone(ZoneType.Exile) && activator.equals(source.getOwner())
                         && source.isForetold() && !source.isForetoldThisTurn() && !source.getManaCost().isNoCost()) {
                     // Its foretell cost is equal to its mana cost reduced by {2}.
                     final SpellAbility foretold = sa.copy(activator);
@@ -440,7 +440,10 @@ public final class GameActionUtil {
 
         for (KeywordInterface inst : source.getKeywords()) {
             final String keyword = inst.getOriginal();
-            if (keyword.startsWith("Buyback")) {
+            if (keyword.equals("Bargain")) {
+                final Cost cost = new Cost("Sac<1/Artifact;Enchantment;Card.token/artifact, enchantment or token>", false);
+                costs.add(new OptionalCostValue(OptionalCost.Bargain, cost));
+            } else if (keyword.startsWith("Buyback")) {
                 final Cost cost = new Cost(keyword.substring(8), false);
                 costs.add(new OptionalCostValue(OptionalCost.Buyback, cost));
             } else if (keyword.startsWith("Entwine")) {
@@ -905,6 +908,11 @@ public final class GameActionUtil {
             if (ability.hasParam("Prototype")) {
                 oldCard.removeCloneState(oldCard.getPrototypeTimestamp());
             }
+        }
+
+        if (ability.getApi() == ApiType.Charm) {
+            // reset chain
+            ability.setSubAbility(null);
         }
 
         ability.clearTargets();

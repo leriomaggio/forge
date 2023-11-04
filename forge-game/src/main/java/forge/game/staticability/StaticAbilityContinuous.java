@@ -213,7 +213,7 @@ public final class StaticAbilityContinuous {
                         if (!hostCard.hasChosenPlayer() && input.contains("ChosenPlayer")) {
                             return true;
                         }
-                        if (!hostCard.hasChosenName() && input.contains("ChosenName")) {
+                        if (!hostCard.hasNamedCard() && input.contains("ChosenName")) {
                             return true;
                         }
                         if (!hostCard.hasChosenEvenOdd() && (input.contains("ChosenEvenOdd") || input.contains("chosenEvenOdd"))) {
@@ -297,8 +297,8 @@ public final class StaticAbilityContinuous {
                             input = input.replaceAll("ChosenPlayerUID", String.valueOf(cp.getId()));
                             input = input.replaceAll("ChosenPlayerName", cp.getName());
                         }
-                        if (hostCard.hasChosenName()) {
-                            final String chosenName = hostCard.getChosenName().replace(",", ";");
+                        if (hostCard.hasNamedCard()) {
+                            final String chosenName = hostCard.getNamedCard().replace(",", ";");
                             input = input.replaceAll("ChosenName", "Card.named" + chosenName);
                         }
                         if (hostCard.hasChosenEvenOdd()) {
@@ -593,10 +593,6 @@ public final class StaticAbilityContinuous {
                     int add = AbilityUtils.calculateAmount(hostCard, mhs, stAb);
                     p.addAdditionalOptionalVote(se.getTimestamp(), add);
                 }
-
-                if (params.containsKey("ManaConversion")) {
-                    AbilityUtils.applyManaColorConversion(p.getManaPool(), params);
-                }
             }
         }
 
@@ -674,8 +670,13 @@ public final class StaticAbilityContinuous {
                     affectedCard.addChangedName(null, true, se.getTimestamp(), stAb.getId());
                 }
                 if (stAb.hasParam("SetName")) {
-                    affectedCard.addChangedName(stAb.getParam("SetName"), false,
-                            se.getTimestamp(), stAb.getId());
+                    String newName = stAb.getParam("SetName");
+                    if (newName.equals("ChosenName")) {
+                        newName = hostCard.getNamedCard();
+                    }
+                    if (!newName.isEmpty()) {
+                        affectedCard.addChangedName(newName, false, se.getTimestamp(), stAb.getId());
+                    }
                 }
 
                 // Change color words
@@ -770,7 +771,7 @@ public final class StaticAbilityContinuous {
                 }
 
                 affectedCard.addChangedCardKeywords(newKeywords, removeKeywords,
-                        removeAllAbilities, hostCard.getTimestamp(), stAb.getId());
+                        removeAllAbilities, hostCard.getTimestamp(), stAb.getId(), false);
             }
 
             // add HIDDEN keywords
@@ -842,9 +843,6 @@ public final class StaticAbilityContinuous {
                                     newSA.setRestrictions(sa.getRestrictions());
                                     newSA.getRestrictions().setLimitToCheck(params.get("GainsAbilitiesLimitPerTurn"));
                                 }
-                                if (params.containsKey("GainsAbilitiesActivateIgnoreColor")) {
-                                    newSA.putParam("ActivateIgnoreColor", params.get("GainsAbilitiesActivateIgnoreColor"));
-                                }
                                 newSA.setOriginalAbility(sa); // need to be set to get the Once Per turn Clause correct
                                 newSA.setGrantorStatic(stAb);
                                 newSA.setIntrinsic(false);
@@ -902,7 +900,7 @@ public final class StaticAbilityContinuous {
             if (addTypes != null || removeTypes != null || addAllCreatureTypes
                     || !remove.isEmpty()) {
                 affectedCard.addChangedCardTypes(addTypes, removeTypes, addAllCreatureTypes, remove,
-                        hostCard.getTimestamp(), stAb.getId(), true, stAb.hasParam("CharacteristicDefining"));
+                        hostCard.getTimestamp(), stAb.getId(), false, stAb.hasParam("CharacteristicDefining"));
             }
 
             // add colors

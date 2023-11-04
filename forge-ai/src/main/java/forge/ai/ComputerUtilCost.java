@@ -356,6 +356,18 @@ public class ComputerUtilCost {
                     if (!CardLists.filterControlledBy(source.getEnchantedBy(), source.getController()).isEmpty()) {
                         return false;
                     }
+                    if (source.isCreature()) {
+                        // e.g. Sakura Tribe-Elder
+                        final boolean beforeNextTurn = ai.getGame().getPhaseHandler().is(PhaseType.END_OF_TURN) && ai.getGame().getPhaseHandler().getNextTurn().equals(ai);
+                        final boolean creatureInDanger = ComputerUtil.predictCreatureWillDieThisTurn(ai, source, sourceAbility);
+                        final int lifeThreshold = (((PlayerControllerAi) ai.getController()).getAi().getIntProperty(AiProps.AI_IN_DANGER_THRESHOLD));
+                        final boolean aiInDanger = ai.getLife() <= lifeThreshold && ai.canLoseLife() && !ai.cantLoseForZeroOrLessLife();
+                        if (creatureInDanger) {
+                            return true;
+                        } else if (aiInDanger || !beforeNextTurn) {
+                            return false;
+                        }
+                    }
                     continue;
                 }
 
@@ -398,10 +410,8 @@ public class ComputerUtilCost {
             return false;
         }
         for (final CostPart part : cost.getCostParts()) {
-            if (part instanceof CostSacrifice) {
-                if ("CARDNAME".equals(part.getType())) {
-                    return true;
-                }
+            if (part instanceof CostSacrifice && part.payCostFromSource()) {
+                return true;
             }
         }
         return false;
@@ -594,6 +604,20 @@ public class ComputerUtilCost {
                         }
                     });
                     if (nonManaSources.size() < part.convertAmount()) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // Bail early on Casualty in case there are no cards that would make sense to pay with
+        if (sa.getHostCard().hasKeyword(Keyword.CASUALTY)) {
+            for (final CostPart part : sa.getPayCosts().getCostParts()) {
+                if (part instanceof CostSacrifice) {
+                    CardCollection valid = CardLists.getValidCards(player.getCardsIn(ZoneType.Battlefield), part.getType().split(";"),
+                            sa.getActivatingPlayer(), sa.getHostCard(), sa);
+                    valid = CardLists.filter(valid, Predicates.not(CardPredicates.hasSVar("AIDontSacToCasualty")));
+                    if (valid.isEmpty()) {
                         return false;
                     }
                 }

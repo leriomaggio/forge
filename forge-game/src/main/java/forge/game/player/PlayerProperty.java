@@ -79,6 +79,10 @@ public class PlayerProperty {
             if (!player.equals(source.getOwner())) {
                 return false;
             }
+        } else if (property.equals("descended")) {
+            if (!(player.getDescended() > 0)) {
+                return false;
+            }
         } else if (property.equals("isMonarch")) {
             if (!player.isMonarch()) {
                 return false;
@@ -187,6 +191,26 @@ public class PlayerProperty {
             }
         } else if (property.equals("IsRemembered")) {
             if (!source.isRemembered(player)) {
+                return false;
+            }
+        } else if (property.equals("IsRememberedOrController")) {
+            boolean found = false;
+            for (Object o : source.getRemembered()) {
+                if (o instanceof Player) {
+                    final Player p = (Player) o;
+                    if (p.equals(player)) {
+                        found = true;
+                        break;
+                    }
+                } else if (o instanceof Card) {
+                    final Card c = (Card) o;
+                    if (c.getController().equals(player)) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) {
                 return false;
             }
         } else if (property.equals("IsNotRemembered")) {

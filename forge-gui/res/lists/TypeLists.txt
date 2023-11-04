@@ -5,6 +5,7 @@ Swamp:Swamps
 Mountain:Mountains
 Forest:Forests
 [LandTypes]
+Cave:Caves
 Desert:Deserts
 Gate:Gates
 Lair
@@ -67,8 +68,10 @@ Cow:Cows
 Coward:Cowards
 Crab:Crabs
 Crocodile:Crocodiles
+Cyberman:Cybermen
 Cyborg:Cyborgs
 Cyclops:Cyclopes
+Dalek:Daleks
 Dauthi:Dauthis
 Demigod:Demigods
 Demon:Demons
@@ -76,6 +79,7 @@ Deserter:Deserters
 Devil:Devils
 Dinosaur:Dinosaurs
 Djinn:Djinns
+Doctor:Doctors
 Dog:Dogs
 Dragon:Dragons
 Drake:Drakes
@@ -158,6 +162,7 @@ Leviathan:Leviathans
 Lhurgoyf:Lhurgoyfs
 Licid:Licids
 Lizard:Lizards
+Llama:Llamas
 Lobster:Lobsters
 Mammoth:Mammoths
 Manticore:Manticores
@@ -273,6 +278,7 @@ Thalakos:Thalakoses
 Thopter:Thopters
 Thrull:Thrulls
 Tiefling:Tieflings
+Time Lord:Time Lords
 Treefolk:Treefolks
 Trilobite:Trilobites
 Triskelavite:Triskelavites
@@ -311,6 +317,7 @@ Background
 Cartouche
 Class
 Curse
+Role
 Rune
 Saga
 Shrine
@@ -325,6 +332,7 @@ Fortification
 Gold
 Incubator:Incubators
 Key:Keys
+Map
 Powerstone
 Treasure
 Vehicle
@@ -414,7 +422,9 @@ Undercity
 [BattleTypes]
 Siege
 [PlanarTypes]
+Androzani Minor
 Alara
+Alfava Metraxis
 Amonkhet
 Antausia
 Arcavios
@@ -425,12 +435,14 @@ Bolas's Meditation Realm
 Capenna
 Cridhe
 Dominaria
+Earth
 Echoir
 Eldraine
 Equilor
 Ergamon
 Fabacin
 Fiora
+Gallifrey
 Gargantikar
 Gobakhan
 Ikoria
@@ -449,12 +461,16 @@ Kylem
 Kyneth
 Lorwyn
 Luvion
+Mars
 Mercadia
 Mirrodin
 Moag
 Mongseng
 Muraganda
+Necros
+New Earth
 New Phyrexia
+Outside Mutter's Spiral
 Phyrexia
 Pyrulea
 Rabiah
@@ -466,10 +482,15 @@ Serra's Realm
 Shadowmoor
 Shandalar
 Shenmeng
+Skaro
+Spacecraft
 Tarkir
 The Abyss
+The Dalek Asylum
 The Library
 Theros
+Time
+Trenzalore
 Ulgrotha
 Valla
 Vryn

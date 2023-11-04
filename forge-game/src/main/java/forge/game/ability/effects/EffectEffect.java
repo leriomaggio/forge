@@ -292,8 +292,8 @@ public class EffectEffect extends SpellAbilityEffect {
             }
 
             // Set Chosen name
-            if (!hostCard.getNamedCard().isEmpty()) {
-                eff.setNamedCard(hostCard.getNamedCard());
+            if (hostCard.hasNamedCard()) {
+                eff.setNamedCards(Lists.newArrayList(hostCard.getNamedCards()));
             }
 
             // chosen number
@@ -302,10 +302,6 @@ public class EffectEffect extends SpellAbilityEffect {
                         sa.getParam("SetChosenNumber"), sa));
             } else if (hostCard.hasChosenNumber()) {
                 eff.setChosenNumber(hostCard.getChosenNumber());
-            }
-
-            if (sa.hasParam("CopySVar")) {
-                eff.setSVar(sa.getParam("CopySVar"), hostCard.getSVar(sa.getParam("CopySVar")));
             }
 
             // Copy text changes
@@ -323,7 +319,7 @@ public class EffectEffect extends SpellAbilityEffect {
 
                     @Override
                     public void run() {
-                        game.getAction().exile(eff, null);
+                        game.getAction().exile(eff, null, null);
                     }
                 };
 

@@ -8,6 +8,8 @@ import com.google.common.collect.Lists;
 import forge.Forge;
 import forge.adventure.data.*;
 import forge.adventure.pointofintrest.PointOfInterestChanges;
+import forge.adventure.scene.AdventureDeckEditor;
+import forge.adventure.scene.DeckEditScene;
 import forge.adventure.util.*;
 import forge.adventure.world.WorldSave;
 import forge.card.ColorSet;
@@ -329,8 +331,13 @@ public class AdventurePlayer implements Serializable, SaveFileContent {
         heroRace = data.readInt("heroRace");
         avatarIndex = data.readInt("avatarIndex");
         isFemale = data.readBool("isFemale");
-        if (data.containsKey("colorIdentity"))
-            setColorIdentity(data.readString("colorIdentity"));
+        if (data.containsKey("colorIdentity")) {
+            String temp = data.readString("colorIdentity");
+            if (temp != null)
+                setColorIdentity(temp);
+            else
+                colorIdentity = ColorSet.ALL_COLORS;
+        }
         else
             colorIdentity = ColorSet.ALL_COLORS;
 
@@ -341,7 +348,11 @@ public class AdventurePlayer implements Serializable, SaveFileContent {
         worldPosX = data.readFloat("worldPosX");
         worldPosY = data.readFloat("worldPosY");
 
-        if (data.containsKey("blessing")) blessing = (EffectData) data.readObject("blessing");
+        if (data.containsKey("blessing")) {
+            EffectData temp = (EffectData) data.readObject("blessing");
+            if (temp != null)
+                blessing = temp;
+        }
 
         if (data.containsKey("inventory")) {
             String[] inv = (String[]) data.readObject("inventory");
@@ -373,13 +384,17 @@ public class AdventurePlayer implements Serializable, SaveFileContent {
         }
         if (data.containsKey("boosters")) {
             Deck[] decks = (Deck[]) data.readObject("boosters");
-            for (Deck d : decks) {
-                if (d != null && !d.isEmpty()) {
-                    boostersOwned.add(d);
-                } else {
-                    System.err.printf("Null or empty booster %s\n", d);
-                    System.out.println("You have an empty booster pack in your inventory.");
+            if (decks != null) {
+                for (Deck d : decks) {
+                    if (d != null && !d.isEmpty()) {
+                        boostersOwned.add(d);
+                    } else {
+                        System.err.printf("Null or empty booster %s\n", d);
+                        System.out.println("You have an empty booster pack in your inventory.");
+                    }
                 }
+            } else {
+                System.err.println("Deck[] is null! [boosters]");
             }
         }
 
@@ -588,6 +603,9 @@ public class AdventurePlayer implements Serializable, SaveFileContent {
                 newCards.add(reward.getCard());
                 if (reward.isNoSell()) {
                     noSellCards.add(reward.getCard());
+                    AdventureDeckEditor editor = ((AdventureDeckEditor) DeckEditScene.getInstance().getScreen());
+                    if (editor != null)
+                        editor.refresh();
                 }
                 break;
             case Gold:

@@ -73,6 +73,7 @@ public enum AbilityKey {
     Fizzle("Fizzle"),
     FoundSearchingLibrary("FoundSearchingLibrary"),
     Ignore("Ignore"),
+    IgnoreChosen("IgnoreChosen"),
     IsCombat("IsCombat"), // TODO confirm that this and IsCombatDamage can be merged
     IsCombatDamage("IsCombatDamage"),
     IsDamage("IsDamage"),
@@ -118,6 +119,7 @@ public enum AbilityKey {
     ScryBottom("ScryBottom"),
     ScryNum("ScryNum"),
     Sides("Sides"),
+    SimultaneousETB("SimultaneousETB"),
     Source("Source"),
     Sources("Sources"),
     SourceSA("SourceSA"),

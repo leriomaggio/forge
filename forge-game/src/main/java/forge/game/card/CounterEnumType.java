@@ -71,6 +71,8 @@ public enum CounterEnumType {
 
     CHARGE("CHARG", 246, 192, 0),
 
+    CHORUS("CHRUS", 0, 192, 246),
+
     COIN("COIN",255,215,0),
 
     COLLECTION("CLLCT", 255, 215, 0),
@@ -119,9 +121,13 @@ public enum CounterEnumType {
 
     ELIXIR("ELIXR", 81, 221, 175),
 
+    EMBER("EMBER", 247, 52, 43),
+    
     EON("EON", 23, 194, 255),
 
-    EMBER("EMBER", 247, 52, 43),
+    ERUPTION("ERUPTION", 255, 124, 124),
+    
+    EXPOSURE("EXPOSURE", 50, 180, 30),
 
     EYEBALL("EYE", 184, 202, 201),
 
@@ -136,6 +142,8 @@ public enum CounterEnumType {
     FETCH("FETCH", 180, 235, 52),
 
     FILIBUSTER("FLBTR", 255, 179, 119),
+
+    FINALITY("FINAL", 255, 255, 255),
 
     FLAME("FLAME", 255, 143, 43),
     
@@ -332,6 +340,8 @@ public enum CounterEnumType {
     SHRED("SHRED", 255, 165, 152),
 
     SILVER("SILVER", 192, 192, 192),
+    
+    SKEWER("SKEWER", 202, 192, 156),
 
     SLEEP("SLEEP", 178, 192, 255),
 
