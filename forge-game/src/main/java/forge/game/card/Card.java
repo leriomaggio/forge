@@ -4439,11 +4439,11 @@ public class Card extends GameEntity implements Comparable<Card>, IHasSVars {
         view.updateTapped(this);
     }
 
-    public final void tap(boolean tapAnimation, SpellAbility cause, Player tapper) {
-        tap(false, tapAnimation, cause, tapper);
+    public final boolean tap(boolean tapAnimation, SpellAbility cause, Player tapper) {
+        return tap(false, tapAnimation, cause, tapper);
     }
-    public final void tap(boolean attacker, boolean tapAnimation, SpellAbility cause, Player tapper) {
-        if (tapped) { return; }
+    public final boolean tap(boolean attacker, boolean tapAnimation, SpellAbility cause, Player tapper) {
+        if (tapped) { return false; }
 
         // Run replacement effects
         getGame().getReplacementHandler().run(ReplacementType.Tap, AbilityKey.mapFromAffected(this));
@@ -4458,14 +4458,15 @@ public class Card extends GameEntity implements Comparable<Card>, IHasSVars {
         setTapped(true);
         view.updateNeedsTapAnimation(tapAnimation);
         getGame().fireEvent(new GameEventCardTapped(this, true));
+        return true;
     }
 
-    public final void untap(boolean untapAnimation) {
-        if (!tapped) { return; }
+    public final boolean untap(boolean untapAnimation) {
+        if (!tapped) { return false; }
 
         // Run Replacement effects
         if (getGame().getReplacementHandler().run(ReplacementType.Untap, AbilityKey.mapFromAffected(this)) != ReplacementResult.NotReplaced) {
-            return;
+            return false;
         }
 
         // Run triggers
@@ -4475,6 +4476,7 @@ public class Card extends GameEntity implements Comparable<Card>, IHasSVars {
         setTapped(false);
         view.updateNeedsUntapAnimation(untapAnimation);
         getGame().fireEvent(new GameEventCardTapped(this, false));
+        return true;
     }
 
     public final Table<Long, Long, CardTraitChanges> getChangedCardTraitsByText() {
