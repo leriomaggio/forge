@@ -63,6 +63,15 @@ public final class ServerGameLobby extends GameLobby implements IHasForgeLog {
     /** Set the lobby's declared mode (Constructed / Limited) and broadcast to clients. */
     public void setLimitedMode(boolean limited) {
         getData().setLimitedMode(limited);
+        if (limited) {
+            // Limited is its own way to build a deck, so neither the Game Format dropdown
+            // nor the variant checkboxes apply to it and the lobby hides both. The applied
+            // set behind them was left alone though, so a format or variant chosen
+            // beforehand still reached the match, and the commander formats also skipped
+            // the Limited legality check on the way. Nothing is restored on the way back:
+            // both controls are visible and one selection away.
+            clearVariants();
+        }
         updateView(true);
     }
 

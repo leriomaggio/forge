@@ -332,6 +332,12 @@ public abstract class GameLobby implements IHasGameType {
 
     public void clearVariants() {
         data.appliedVariants.clear();
+        // appliedVariants backs both lobby controls: the mutually exclusive Game Format
+        // dropdown and the multi-select variant checkboxes. removeVariant reverts
+        // currentGameType as each entry goes, but clearing the set wholesale skipped that,
+        // so the lobby kept reporting the last Game Format it had been set to. Nothing is
+        // applied any more, so Constructed is the only honest value.
+        currentGameType = GameType.Constructed;
     }
 
     public Iterable<GameType> getAppliedVariants() {
