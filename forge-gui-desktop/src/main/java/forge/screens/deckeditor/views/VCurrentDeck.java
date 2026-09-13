@@ -249,6 +249,10 @@ public enum VCurrentDeck implements IVDoc<CCurrentDeck> {
         return btnImport;
     }
 
+    public FLabel getLblFormat() {
+        return lblFormat;
+    }
+
     public FComboBox<GameType> getCbFormat() {
         return cbFormat;
     }

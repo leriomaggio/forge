@@ -50,6 +50,7 @@ import forge.screens.deckeditor.controllers.DeckController;
 import forge.screens.deckeditor.views.*;
 import forge.screens.match.controllers.CDetailPicture;
 import forge.toolbox.FComboBox;
+import forge.toolbox.FLabel;
 import forge.util.ItemPool;
 import forge.util.Localizer;
 
@@ -176,15 +177,19 @@ public enum CDeckEditorUI implements ICDoc {
     private void syncFormatDropdown() {
         if (childController == null) { return; }
         final FComboBox<GameType> cb = VCurrentDeck.SINGLETON_INSTANCE.getCbFormat();
+        final FLabel lbl = VCurrentDeck.SINGLETON_INSTANCE.getLblFormat();
         final GameType gt = childController.getGameType();
-        if (isFormatDropdownGameType(gt)) {
-            if (cb.getSelectedItem() != gt) {
-                cb.setSelectedItem(gt);
-            }
-            cb.setEnabled(true);
-        } else {
-            cb.setEnabled(false);
+        // VCurrentDeck adds the format control unconditionally, but the editors outside
+        // these game types cannot change format at all, so greying it out left them with
+        // a dead control. Hide it instead. pnlHeader uses MigLayout hidemode 3, so the
+        // row collapses rather than leaving a gap.
+        final boolean usable = isFormatDropdownGameType(gt);
+        if (usable && cb.getSelectedItem() != gt) {
+            cb.setSelectedItem(gt);
         }
+        cb.setEnabled(usable);
+        cb.setVisible(usable);
+        lbl.setVisible(usable);
         syncTabCaption(gt);
     }
 
