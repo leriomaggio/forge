@@ -79,7 +79,8 @@ public class CLobby implements IDraftEventHandler {
             NetworkEvent.EventPanelText text,
             boolean showDismissX,
             boolean showConformance,
-            boolean conformanceEnabled) { }
+            boolean conformanceEnabled,
+            boolean showDeckChooser) { }
 
     private final VLobby view;
     private LobbyMode currentMode = LobbyMode.CONSTRUCTED;
@@ -236,10 +237,14 @@ public class CLobby implements IDraftEventHandler {
         NetworkEvent.EventPanelText text = NetworkEvent.computeEventPanelText(
                 isHost, activeEventId, currentEvent, lastEventView);
 
+        // The chooser can only offer event decks, and no event is selected for the match
+        // before state 2, so until then it has nothing valid to list. Same condition as
+        // the conformance checkbox, kept as its own component so the two stay independent.
         return new EventPanelContents(text,
                 isHost && (inState1 || inState2),
                 inState2,
-                isHost && !inState1);
+                isHost && !inState1,
+                inState2);
     }
 
     void onDismissEvent() {

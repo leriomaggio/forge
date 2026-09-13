@@ -919,6 +919,7 @@ public class VLobby implements ILobbyView {
     void updateRightPanelForMode() {
         decksFrame.removeAll();
         if (!controller.isLimitedMode()) {
+            restoreDeckChoosersForConstructed();
             populateDeckPanel(lobby.getGameType());
         } else {
             eventRightPanel.removeAll();
@@ -937,6 +938,10 @@ public class VLobby implements ILobbyView {
                 controller.scanAvailableEvents();
             }
             updateDeckListFilter();
+            // A chooser built while limited is active starts visible, and the paths that
+            // build one (a seat becoming Human, Add player) do not go through
+            // setEventPanelContents. Settle visibility here as well, from the same state.
+            setDeckChooserVisible(controller.getActiveEventId() != null);
         }
         decksFrame.revalidate();
         decksFrame.repaint();
@@ -989,8 +994,48 @@ public class VLobby implements ILobbyView {
         }
         cbDeckConformance.setVisible(c.showConformance());
         cbDeckConformance.setEnabled(c.conformanceEnabled());
+        if (controller.isLimitedMode()) {
+            setDeckChooserVisible(c.showDeckChooser());
+        }
         eventConfigPanel.revalidate();
         eventConfigPanel.repaint();
+    }
+
+    /**
+     * Shows or hides the focused seat's deck chooser. eventRightPanel holds the event
+     * config panel and the chooser, and both it and the chooser use MigLayout hidemode 3,
+     * so hiding collapses the space rather than leaving a hole. Called from both the panel
+     * build and the event-state render, because the two change independently: dismissing an
+     * event never re-runs the build, and building a chooser never re-runs the render.
+     * Only ever called while limited mode owns the chooser. Everything it switches off is
+     * switched back on by restoreDeckChoosersForConstructed().
+     */
+    private void setDeckChooserVisible(final boolean visible) {
+        if (playerWithFocus >= playerPanels.size()) { return; }
+        final FDeckChooser chooser = getDeckChooser(playerWithFocus);
+        if (chooser != null) { chooser.setVisible(visible); }
+    }
+
+    /**
+     * Puts every seat's chooser back to its constructed state. The chooser instances are
+     * cached per seat and shared between the two lobby modes, so anything limited mode
+     * switches off has to be switched back on here or it stays off for the rest of the
+     * session. Every seat, not just the focused one, because focus can move while limited
+     * is active. Restoring from the saved pref is safe because pinning no longer writes to
+     * it, so it still holds the user's constructed category and deck selection.
+     */
+    private void restoreDeckChoosersForConstructed() {
+        for (final PlayerPanel panel : playerPanels) {
+            final FDeckChooser chooser = panel.getDeckChooser();
+            if (chooser == null) { continue; }
+            chooser.setVisible(true);
+            chooser.setDeckTypeSelectorVisible(true);
+            chooser.setRandomButtonVisible(true);
+            if (chooser.isLimitedPinned()) {
+                chooser.setLimitedPinned(false);
+                chooser.restoreSavedState();
+            }
+        }
     }
 
     /** Delegator kept for existing call sites; prefer controller.refreshEventPanel(). */
@@ -1004,6 +1049,16 @@ public class VLobby implements ILobbyView {
 
         final FDeckChooser chooser = getDeckChooser(playerWithFocus);
         if (chooser == null) return;
+
+        // A limited match is played from the event's own decks, so the deck type is not a
+        // choice here. Every other entry in the dropdown resolves to a pool this lobby
+        // will not accept, and the forced reselection below would discard the pick on the
+        // next update anyway. Random means little over two or three event decks; View Deck
+        // stays, it is how you check which pool you are about to play.
+        // Pin first: everything after this can reach selectMainDeck, and so saveState.
+        chooser.setLimitedPinned(true);
+        chooser.setDeckTypeSelectorVisible(false);
+        chooser.setRandomButtonVisible(false);
 
         if (chooser.getSelectedDeckType() != DeckType.NET_EVENT_DECK) {
             chooser.setSelectedDeckType(DeckType.NET_EVENT_DECK);

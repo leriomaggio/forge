@@ -38,6 +38,7 @@ import java.util.function.Predicate;
 public class FDeckChooser extends JPanel implements IDecksComboBoxListener {
     private DecksComboBox decksComboBox;
     private DeckType selectedDeckType;
+    private boolean limitedPinned;
     private ItemManagerContainer lstDecksContainer;
     private NetDeckCategory netDeckCategory;
     private NetDeckArchiveStandard NetDeckArchiveStandard;
@@ -125,6 +126,33 @@ public class FDeckChooser extends JPanel implements IDecksComboBoxListener {
     }
 
     public DeckManager getLstDecks() { return lstDecks; }
+
+    /**
+     * Shows or hides the deck type selector. The limited lobby pins the chooser to
+     * NET_EVENT_DECK, so the dropdown has one reachable entry and no purpose. The list
+     * keeps its heading either way, refreshDecksList sets it from the deck type.
+     */
+    public void setDeckTypeSelectorVisible(final boolean visible) {
+        if (decksComboBox != null) { decksComboBox.setVisible(visible); }
+    }
+
+    /** Shows or hides Random, which has little meaning over a fixed pool of event decks. */
+    public void setRandomButtonVisible(final boolean visible) {
+        btnRandom.setVisible(visible);
+    }
+
+    /**
+     * Marks the chooser as pinned to event decks by the limited lobby. Pinning is not a
+     * user choice, so it must not reach the saved state: this chooser instance is shared
+     * with the constructed lobby and its pref key is shared with the offline one, so a
+     * saved NET_EVENT_DECK comes back as the default deck category everywhere. Keeping the
+     * pref clean is also what lets the constructed lobby restore from it on the way back.
+     */
+    public void setLimitedPinned(final boolean pinned) {
+        limitedPinned = pinned;
+    }
+
+    public boolean isLimitedPinned() { return limitedPinned; }
 
     public void setDeckSelectionCommand(final UiCommand command) {
         deckSelectionCommand = command;
@@ -788,6 +816,9 @@ public class FDeckChooser extends JPanel implements IDecksComboBoxListener {
     private final String SELECTED_DECK_DELIMITER = "::";
 
     public void saveState() {
+        // While the limited lobby has the chooser pinned to event decks, the selection is
+        // not the user's and must not be persisted over their constructed one.
+        if (limitedPinned) { return; }
         if (stateSetting == null) {
             throw new NullPointerException("State setting missing. Specify first using the initialize() method.");
         }
