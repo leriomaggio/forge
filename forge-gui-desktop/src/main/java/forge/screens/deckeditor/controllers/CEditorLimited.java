@@ -244,6 +244,19 @@ public final class CEditorLimited<T extends DeckBase> extends CDeckEditor<T> {
         VCurrentDeck.SINGLETON_INSTANCE.getTxfTitle().setEnabled(false);
         this.getCbxSection().setVisible(true);
 
+        // Open and Import pull an external decklist through the fixed pool, keeping
+        // only the cards the pool happens to hold, so they hand back a partial deck
+        // with no warning. New stays: on a finite catalog it empties the deck and
+        // returns the whole pool to the sideboard, which is how you start the build
+        // over. Save and Save As stay too, they write the pool deck back out.
+        VCurrentDeck.SINGLETON_INSTANCE.getBtnOpen().setVisible(false);
+        VCurrentDeck.SINGLETON_INSTANCE.getBtnImport().setVisible(false);
+
+        // A limited pool almost never holds four copies of a card, and the single-copy
+        // buttons already cover the rare case where it does.
+        this.getBtnAdd4().setVisible(false);
+        this.getBtnRemove4().setVisible(false);
+
         SHiddenTabs.hide(VDeckgen.SINGLETON_INSTANCE, VAllDecks.SINGLETON_INSTANCE,
                 VCommanderDecks.SINGLETON_INSTANCE, VOathbreakerDecks.SINGLETON_INSTANCE,
                 VBrawlDecks.SINGLETON_INSTANCE, VTinyLeadersDecks.SINGLETON_INSTANCE);
