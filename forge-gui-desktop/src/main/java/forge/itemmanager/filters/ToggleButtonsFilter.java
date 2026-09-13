@@ -31,7 +31,7 @@ public abstract class ToggleButtonsFilter<T extends InventoryItem> extends ItemF
     
     protected FLabel addToggleButton(JPanel widget, SkinImage icon, String tooltip) {
         final FLabel button = new FLabel.Builder()
-                .icon(icon).iconScaleAuto(false)
+                .icon(icon).iconScaleAuto(true)
                 .fontSize(11)
                 .tooltip(tooltip)
                 .hoverable().selectable(true).selected(true)

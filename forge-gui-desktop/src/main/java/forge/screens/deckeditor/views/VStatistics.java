@@ -297,8 +297,10 @@ public enum VStatistics implements IVDoc<CStatistics> {
     //========== Other methods
 
     private static FLabel buildLabel(final SkinImage icon, final boolean zebra) {
+        // Same HiDPI pairing as the filter toggles: the icon is fetched oversampled, so it
+        // must be scaled to the label rather than drawn at its native size.
         final FLabel lbl = new FLabel.Builder().text("0 (0%)")
-                .icon(icon).iconScaleAuto(false)
+                .icon(icon).iconScaleAuto(true)
                 .fontSize(11).build();
 
         if (zebra) {
