@@ -125,6 +125,11 @@ public abstract class ACEditorBase<TItem extends InventoryItem, TModel extends D
             .icon(FSkin.getIcon(FSkinProp.ICO_MINUS))
             .iconScaleAuto(false).hoverable().build();
 
+    // The land image is fetched oversampled so it stays crisp on a HiDPI display,
+    // which means it is screenScale times larger than the space it has to sit in.
+    // iconScaleAuto lets FLabel.resetIcon() scale it back down to the button height
+    // on every resize, so it fits at any screen scale. Without it the image is drawn
+    // at its native size and overflows the 30px button row on a 2x display.
     private final FLabel btnAddBasicLands = new FLabel.Builder()
             .fontSize(14)
             .text(localizer.getMessage("lblAddBasicLands"))
@@ -132,7 +137,7 @@ public abstract class ACEditorBase<TItem extends InventoryItem, TModel extends D
             .icon(FSkin.getImage(FSkinProp.IMG_LAND,
                 Math.round(18 * GuiBase.getInterface().getScreenScale()),
                 Math.round(18 * GuiBase.getInterface().getScreenScale())))
-            .iconScaleAuto(false).hoverable().build();
+            .iconScaleAuto(true).hoverable().build();
 
     protected ACEditorBase(final FScreen screen0, final CDetailPicture cDetailPicture0, final GameType gameType0) {
         this.screen = screen0;
