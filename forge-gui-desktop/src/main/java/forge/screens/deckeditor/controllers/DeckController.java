@@ -124,7 +124,7 @@ public class DeckController<T extends DeckBase> {
         // Allow to specify the name of Deck in DeckImporter
         if (deck.hasName())
             currentDeck.setName(deck.getName());
-        this.setModel((T) currentDeck, isStored);
+        this.onModelChanged(isStored);
     }
 
     public Deck getCurrentDeckInEditor(){
