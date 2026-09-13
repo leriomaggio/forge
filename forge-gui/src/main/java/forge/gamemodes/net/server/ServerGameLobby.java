@@ -76,8 +76,22 @@ public final class ServerGameLobby extends GameLobby implements IHasForgeLog {
     }
 
     public ServerGameLobby() {
-        addSlot(new LobbySlot(LobbySlotType.LOCAL, localName(), localAvatarIndices()[0], localSleeveIndices()[0],0, true, false, Collections.emptySet()));
-        addSlot(new LobbySlot(LobbySlotType.OPEN, null, -1, -1, 1, false, false, Collections.emptySet()));
+        final int[] avatars = localAvatarIndices();
+        final int[] sleeves = localSleeveIndices();
+
+        addSlot(new LobbySlot(LobbySlotType.LOCAL, localName(), avatars[0], sleeves[0], 0, true, false, Collections.emptySet()));
+
+        // The second seat used to be built with -1 for both. That is the right thing to
+        // *draw* while the seat is open, and PlayerPanel picks the placeholder from the
+        // slot type rather than the stored index, so nothing needed -1 to be stored.
+        // But a host switching the seat to AI or Human left it at -1 and the seat
+        // stayed blank. Store the second local avatar and sleeve, as LocalLobby does.
+        // Guarded because UI_AVATARS and UI_SLEEVES are user-editable prefs that default
+        // to "0,1" but need not hold two values.
+        addSlot(new LobbySlot(LobbySlotType.OPEN, null,
+                avatars.length > 1 ? avatars[1] : -1,
+                sleeves.length > 1 ? sleeves[1] : -1,
+                1, false, false, Collections.emptySet()));
     }
 
     /**
