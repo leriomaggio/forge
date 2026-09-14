@@ -454,16 +454,24 @@ public class PlayerPanel extends FPanel {
         }
     }
 
+    // These buttons carry a deck type followed by a deck name, which for an event deck
+    // runs to the format, the product and a timestamp. That does not fit the seat, and a
+    // clipped name was unreadable with no way to see the rest. Mirror the text into the
+    // tooltip from the same setter, so the two cannot drift apart.
+
     public void setVanguardButtonText(final String text) {
         vgdSelectorBtn.setText(text);
+        vgdSelectorBtn.setToolTipText(text);
     }
 
     public void setDeckSelectorButtonText(final String text) {
         deckBtn.setText(text);
+        deckBtn.setToolTipText(text);
     }
 
     public void setCommanderDeckSelectorButtonText(final String text) {
         cmdDeckSelectorBtn.setText(text);
+        cmdDeckSelectorBtn.setToolTipText(text);
     }
 
     public void focusOnAvatar() {
